@@ -1,4 +1,4 @@
-defmodule Srtm.Client do
+defmodule SRTM.Client do
   @moduledoc """
   This module is the client for querying elevation data.
 
@@ -9,7 +9,7 @@ defmodule Srtm.Client do
   """
 
   alias __MODULE__, as: Client
-  alias Srtm.DataCell
+  alias SRTM.DataCell
 
   defstruct [:client, :cache_path, :data_cells, :source]
 
@@ -18,12 +18,12 @@ defmodule Srtm.Client do
 
   ## Examples
 
-      iex> Srtm.Client.new("./cache")
-      %Srtm.Client{}
+      iex> SRTM.Client.new("./cache")
+      %SRTM.Client{}
 
   """
   def new(path, opts \\ []) do
-    source = Keyword.get(opts, :source, Srtm.Source.USGS)
+    source = Keyword.get(opts, :source, SRTM.Source.USGS)
 
     cache_path = Path.expand(path)
     if not File.dir?(cache_path), do: File.mkdir_p!(cache_path)

@@ -1,6 +1,6 @@
-defmodule Srtm.Source.USGS do
+defmodule SRTM.Source.USGS do
   @moduledoc false
-  @behaviour Srtm.Source
+  @behaviour SRTM.Source
 
   @list "./priv/list.json"
         |> File.read!()

@@ -1,4 +1,4 @@
-# Srtm
+# SRTM
 
 **TODO: Add description**
 

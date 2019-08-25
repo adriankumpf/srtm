@@ -1,4 +1,4 @@
-defmodule Srtm do
+defmodule SRTM do
   @moduledoc """
   An Elixir library for working with Stripe.
   """
@@ -13,8 +13,8 @@ defmodule Srtm do
 
   ## Examples
 
-      iex> Srtm.get_elevation(client, 36.455556,-116.866667)
-      {:ok, -51, %Srtm.Client{}}
+      iex> SRTM.get_elevation(client, 36.455556,-116.866667)
+      {:ok, -51, %SRTM.Client{}}
 
   """
   defdelegate get_elevation(client, latitude, longitude), to: Client

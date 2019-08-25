@@ -1,4 +1,4 @@
-defmodule Srtm.DataCell do
+defmodule SRTM.DataCell do
   @moduledoc false
 
   defstruct [:hgt_data, :latitude, :longitude, :points_per_cell]

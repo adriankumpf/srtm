@@ -1,4 +1,4 @@
-defmodule Srtm.MixProject do
+defmodule SRTM.MixProject do
   use Mix.Project
 
   def project do
