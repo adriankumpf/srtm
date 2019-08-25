@@ -1,5 +1,5 @@
 defmodule Srtm.DataCell do
-  import Bitwise
+  @moduledoc false
 
   defstruct [:hgt_data, :latitude, :longitude, :points_per_cell]
 
@@ -24,10 +24,9 @@ defmodule Srtm.DataCell do
   end
 
   def get_elevation(%__MODULE__{points_per_cell: ppc} = dc, lat, lng) do
-    local_lat = trunc((lat - dc.latitude) * ppc)
-    local_lng = trunc((lng - dc.longitude) * ppc)
-
-    byte_pos = (ppc - local_lat - 1) * ppc * 2 + local_lng * 2
+    row = trunc((dc.latitude + 1 - lat) * (ppc - 1))
+    col = trunc((lng - dc.longitude) * (ppc - 1))
+    byte_pos = (row * ppc + col) * 2
 
     cond do
       byte_pos < 0 or byte_pos > ppc * ppc * 2 ->
@@ -40,9 +39,14 @@ defmodule Srtm.DataCell do
         nil
 
       true ->
-        :binary.at(dc.hgt_data, byte_pos) <<< 8 ||| :binary.at(dc.hgt_data, byte_pos + 1)
+        dc.hgt_data
+        |> :binary.part(byte_pos, 2)
+        |> decode_elevation()
     end
   end
+
+  defp decode_elevation(<<val::signed-big-integer-size(16)>>) when val in -1000..10000, do: val
+  defp decode_elevation(___), do: nil
 
   defp reverse_coordinates(<<d0::size(8), lat::size(16), d1::size(8), lng::size(24)>>) do
     lat = String.to_integer(<<lat::size(16)>>)

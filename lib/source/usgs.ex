@@ -1,4 +1,5 @@
 defmodule Srtm.Source.USGS do
+  @moduledoc false
   @behaviour Srtm.Source
 
   @list "./priv/list.json"
