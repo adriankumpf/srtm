@@ -23,7 +23,7 @@ defmodule SRTM.DataCell do
     %__MODULE__{hgt_data: hgt_data, latitude: lat, longitude: lng, points_per_cell: ppc}
   end
 
-  def get_elevation(%__MODULE__{points_per_cell: ppc} = dc, lat, lng) do
+  def get_elevation(%__MODULE__{points_per_cell: ppc, hgt_data: hgt_data} = dc, lat, lng) do
     row = trunc((dc.latitude + 1 - lat) * (ppc - 1))
     col = trunc((lng - dc.longitude) * (ppc - 1))
     byte_pos = (row * ppc + col) * 2
@@ -32,21 +32,21 @@ defmodule SRTM.DataCell do
       byte_pos < 0 or byte_pos > ppc * ppc * 2 ->
         raise "Coordinates out of range"
 
-      byte_pos >= byte_size(dc.hgt_data) ->
+      byte_pos >= byte_size(hgt_data) ->
         nil
 
-      :binary.at(dc.hgt_data, byte_pos) == 0x80 && :binary.at(dc.hgt_data, byte_pos + 1) == 0x00 ->
+      :binary.at(hgt_data, byte_pos) == 0x80 && :binary.at(hgt_data, byte_pos + 1) == 0x00 ->
         nil
 
       true ->
-        dc.hgt_data
-        |> :binary.part(byte_pos, 2)
+        hgt_data
+        |> binary_part(byte_pos, 2)
         |> decode_elevation()
     end
   end
 
   defp decode_elevation(<<val::signed-big-integer-size(16)>>) when val in -1000..10000, do: val
-  defp decode_elevation(___), do: nil
+  defp decode_elevation(_binary), do: nil
 
   defp reverse_coordinates(<<d0::size(8), lat::size(16), d1::size(8), lng::size(24)>>) do
     lat = String.to_integer(<<lat::size(16)>>)
