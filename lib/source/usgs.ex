@@ -1,27 +1,25 @@
 defmodule Srtm.Source.USGS do
   @behaviour Srtm.Source
 
-  @base "https://dds.cr.usgs.gov/srtm/version2_1/SRTM3"
-
-  @continents [
-    "Africa",
-    "Australia",
-    "Eurasia",
-    "Islands",
-    "North_America",
-    "South_America"
-  ]
+  @list "./priv/list.json"
+        |> File.read!()
+        |> Jason.decode!()
 
   @impl true
   def fetch(%Tesla.Client{} = client, path, name) do
+    url =
+      with nil <- get_in(@list, ["srtm1", name <> ".hgt"]) do
+        get_in(@list, ["srtm3", name <> ".hgt"])
+      end
+
+    if is_nil(url), do: raise("file not found: #{name}")
+
     result =
-      Enum.reduce_while(@continents, {:error, :not_found}, fn continent, acc ->
-        case Tesla.get(client, "#{@base}/#{continent}/#{name}.hgt.zip") do
-          {:ok, %Tesla.Env{status: 200, body: body}} -> {:halt, {:ok, body}}
-          {:ok, %Tesla.Env{status: 404}} -> {:cont, acc}
-          {:error, reason} -> {:halt, {:error, reason}}
-        end
-      end)
+      case Tesla.get(client, url) do
+        {:ok, %Tesla.Env{status: 200, body: body}} -> {:ok, body}
+        {:ok, %Tesla.Env{}} -> {:error, :not_found}
+        {:error, reason} -> {:error, reason}
+      end
 
     with {:ok, zipped_data} <- result,
          {:ok, [hgt_file]} <- :zip.unzip(zipped_data, cwd: path) do
