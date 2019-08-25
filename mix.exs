@@ -1,20 +1,25 @@
 defmodule SRTM.MixProject do
   use Mix.Project
 
+  @version "0.1.0"
+  @url "https://github.com/adriankumpf/srtm"
+
   def project do
     [
       app: :srtm,
-      version: "0.1.0",
+      version: @version,
       elixir: "~> 1.9",
-      start_permanent: Mix.env() == :prod,
-      deps: deps()
+      name: "SRTM",
+      description:
+        "SRTM is a small library that provides a simple interface to query locations on the earth for elevation data from the NASA Shuttle Radar Topography Mission (SRTM).",
+      deps: deps(),
+      aliases: [docs: &build_docs/1],
+      package: package()
     ]
   end
 
   def application do
-    [
-      extra_applications: [:logger]
-    ]
+    []
   end
 
   defp deps do
@@ -23,5 +28,27 @@ defmodule SRTM.MixProject do
       {:hackney, "~> 1.14.0"},
       {:jason, "~> 1.1"}
     ]
+  end
+
+  defp package do
+    %{
+      licenses: ["MIT"],
+      maintainers: ["Adrian Kumpf"],
+      links: %{"GitHub" => @url}
+    }
+  end
+
+  defp build_docs(_) do
+    Mix.Task.run("compile")
+    ex_doc = Path.join(Mix.Local.path_for(:escript), "ex_doc")
+
+    unless File.exists?(ex_doc) do
+      raise "cannot build docs because escript for ex_doc is not installed"
+    end
+
+    args = ["NimbleParsec", @version, Mix.Project.compile_path()]
+    opts = ~w[--main SRTM --source-ref v#{@version} --source-url #{@url}]
+    System.cmd(ex_doc, args ++ opts)
+    Mix.shell().info("Docs built successfully")
   end
 end

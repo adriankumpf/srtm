@@ -1,11 +1,6 @@
 defmodule SRTM.Client do
   @moduledoc """
-  This module is the client for querying elevation data.
-
-  It caches SRTM files on disk.
-
-  Note: Files are loaded into memory! Querying many coordinates at different
-  locations on Earth will consume quite a bit of memory.
+  This module holds the client for querying elevation data.
   """
 
   alias __MODULE__, as: Client
@@ -14,7 +9,16 @@ defmodule SRTM.Client do
   defstruct [:client, :cache_path, :data_cells, :source]
 
   @doc """
-  Create a client for querying elevation data. It takes a path
+  Creates a client struct.
+
+  If the directory at the given `path` doesn't exist, creates it.
+
+  ## Options
+
+  The supported options are:
+
+  * `:source` - a SRTM source provifder (defaults to
+    [USGS](https://dds.cr.usgs.gov/srtm/version2_1/))
 
   ## Examples
 
@@ -43,6 +47,7 @@ defmodule SRTM.Client do
     %__MODULE__{client: client, cache_path: cache_path, data_cells: data_cells, source: source}
   end
 
+  @doc false
   def get_elevation(%Client{} = client, latitude, longitude) do
     with {:ok, %DataCell{} = dc, %Client{} = client} <- get_data_cell(client, latitude, longitude) do
       {:ok, DataCell.get_elevation(dc, latitude, longitude), client}

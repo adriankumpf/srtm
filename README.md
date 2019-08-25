@@ -1,11 +1,31 @@
 # SRTM
 
-**TODO: Add description**
+![Hex.pm](https://img.shields.io/hexpm/v/srtm)
+
+<!-- MDOC !-->
+
+SRTM is a small library that provides a simple interface to query locations on
+the earth for elevation data from the NASA Shuttle Radar Topography Mission
+(SRTM).
+
+## Examples
+
+```elixir
+client = SRTM.Client.new("./cache")
+#=> %SRTM.Client{}
+
+{:ok, elevation, client} = SRTM.get_elevation(client, 36.455556,-116.866667)
+#=> {:ok, -51, %SRTM.client{}}
+```
+
+<!-- MDOC !-->
+
+See the [documentation](https://hexdocs.pm/srtm) for further
+information on configuration.
 
 ## Installation
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `srtm` to your list of dependencies in `mix.exs`:
+Add `srtm` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
@@ -14,8 +34,3 @@ def deps do
   ]
 end
 ```
-
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/srtm](https://hexdocs.pm/srtm).
-
