@@ -24,7 +24,7 @@ defmodule SRTM do
 
   ## Examples
 
-      iex> {:ok, elevation, client} = SRTM.get_elevation(client, 36.455556,-116.866667)
+      iex> {:ok, elevation, client} = SRTM.get_elevation(client, 36.455556, -116.866667)
       {:ok, -51, %SRTM.client{}}
 
   """
