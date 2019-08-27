@@ -4,7 +4,7 @@ defmodule SRTM do
              |> String.split("<!-- MDOC !-->")
              |> Enum.fetch!(1)
 
-  alias __MODULE__.Client
+  alias __MODULE__.{Client, Error}
 
   @doc """
   Queries locations on the earth for elevation data.
@@ -29,6 +29,6 @@ defmodule SRTM do
 
   """
   @spec get_elevation(client :: Client.t(), latitude :: float, longitude :: float) ::
-          {:ok, elevation :: float, client :: Client.t()} | {:error, reason :: term}
+          {:ok, elevation :: float, client :: Client.t()} | {:error, error :: Error.t()}
   defdelegate get_elevation(client, latitude, longitude), to: Client
 end
