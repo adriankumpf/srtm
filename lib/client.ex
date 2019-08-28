@@ -4,12 +4,19 @@ defmodule SRTM.Client do
   """
 
   alias __MODULE__, as: Client
-  alias SRTM.DataCell
+  alias SRTM.{Error, DataCell}
 
   defstruct [:client, :cache_path, :data_cells, :source]
 
+  @opaque t :: %__MODULE__{
+            client: Tesla.Client.t(),
+            cache_path: String.t(),
+            data_cells: map,
+            source: atom
+          }
+
   @doc """
-  Creates a client struct.
+  Creates a client struct that holds configuration and parsed HGT files.
 
   If the directory at the given `path` doesn't exist, creates it.
 
@@ -23,22 +30,50 @@ defmodule SRTM.Client do
   ## Examples
 
       iex> SRTM.Client.new("./cache")
-      %SRTM.Client{}
+      {:ok, %SRTM.Client{}}
 
   """
+  @spec new(path :: Path.t(), opts :: list) :: {:ok, t} | {:error, error :: Error.t()}
   def new(path, opts \\ []) do
     source = Keyword.get(opts, :source, SRTM.Source.USGS)
+    path = Path.expand(path)
 
-    cache_path = Path.expand(path)
-    if not File.dir?(cache_path), do: File.mkdir_p!(cache_path)
+    with :ok <- create_dir_if_not_exists(path) do
+      middleware = [
+        {Tesla.Middleware.Headers, [{"user-agent", "github.com/adriankumpf/srtm"}]}
+      ]
 
-    middleware = [
-      {Tesla.Middleware.Headers, [{"user-agent", "github.com/adriankumpf/srtm"}]}
-    ]
+      client = Tesla.client(middleware, {Tesla.Adapter.Hackney, recv_timeout: 30_000})
 
-    client = Tesla.client(middleware, {Tesla.Adapter.Hackney, recv_timeout: 30_000})
+      {:ok, %__MODULE__{client: client, cache_path: path, data_cells: %{}, source: source}}
+    end
+  end
 
-    %__MODULE__{client: client, cache_path: cache_path, data_cells: %{}, source: source}
+  @doc """
+  Removes parsed HGT files from the in-memory cache.
+
+  ## Options
+
+  The supported options are:
+
+  * `:keep` - the number of most recently used HGT files to keep (default: 0)
+
+  ## Examples
+
+      iex> SRTM.Client.purge_in_memory_cache(client, keep: 1)
+      {:ok, %SRTM.Client{}}
+  """
+  @spec purge_in_memory_cache(client :: t, opts :: list) :: {:ok, t}
+  def purge_in_memory_cache(%Client{} = client, opts \\ []) do
+    keep = Keyword.get(opts, :keep, 0)
+
+    purged_data_cells =
+      client.data_cells
+      |> Enum.sort_by(fn {_, {:ok, %DataCell{last_used: d}}} -> d end, &order_by_date_desc/2)
+      |> Enum.take(keep)
+      |> Enum.into(%{})
+
+    {:ok, %Client{data_cells: purged_data_cells}}
   end
 
   @doc false
@@ -74,6 +109,13 @@ defmodule SRTM.Client do
     end)
   end
 
+  defp order_by_date_desc(d0, d1) do
+    case DateTime.compare(d0, d1) do
+      :gt -> true
+      _ -> false
+    end
+  end
+
   defp to_cell_name(lat, lng) do
     if(lat >= 0, do: "N", else: "S") <>
       (lat |> floor() |> abs() |> pad(2)) <>
@@ -83,5 +125,19 @@ defmodule SRTM.Client do
 
   defp pad(num, count) do
     num |> Integer.to_string() |> String.pad_leading(count, "0")
+  end
+
+  defp create_dir_if_not_exists(dir) do
+    if File.exists?(dir) do
+      with {:error, reason} <- File.mkdir_p(dir) do
+        {:error,
+         %Error{
+           reason: :io_error,
+           message: "Creation of the directory #{dir} failed: #{inspect(reason)}"
+         }}
+      end
+    else
+      :ok
+    end
   end
 end
