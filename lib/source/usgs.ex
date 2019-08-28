@@ -46,7 +46,7 @@ defmodule SRTM.Source.USGS do
   defp unzip(zipped_binary, opts) do
     with {:error, reason} <- :zip.unzip(zipped_binary, opts) do
       {:error,
-       %Error{reason: :file_corrupt, message: "Unzipping HGT file failed: #{inspect(reason)}"}}
+       %Error{reason: :io_error, message: "Unzipping HGT file failed: #{inspect(reason)}"}}
     end
   end
 end

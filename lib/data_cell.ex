@@ -1,7 +1,7 @@
 defmodule SRTM.DataCell do
   @moduledoc false
 
-  defstruct [:hgt_data, :latitude, :longitude, :points_per_cell]
+  defstruct [:hgt_data, :latitude, :longitude, :points_per_cell, :last_used]
 
   @srtm_3 1201 * 1201 * 2
   @srtm_1 3601 * 3601 * 2
@@ -20,7 +20,12 @@ defmodule SRTM.DataCell do
       |> Path.basename(".hgt")
       |> reverse_coordinates()
 
-    %__MODULE__{hgt_data: hgt_data, latitude: lat, longitude: lng, points_per_cell: ppc}
+    %__MODULE__{
+      hgt_data: hgt_data,
+      latitude: lat,
+      longitude: lng,
+      points_per_cell: ppc
+    }
   end
 
   def get_elevation(%__MODULE__{points_per_cell: ppc, hgt_data: hgt_data} = dc, lat, lng) do

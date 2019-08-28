@@ -38,13 +38,7 @@ defmodule SRTM.Client do
 
     client = Tesla.client(middleware, {Tesla.Adapter.Hackney, recv_timeout: 30_000})
 
-    data_cells =
-      cache_path
-      |> File.ls!()
-      |> Enum.map(&Path.join(path, &1))
-      |> Enum.map(&DataCell.from_file!/1)
-
-    %__MODULE__{client: client, cache_path: cache_path, data_cells: data_cells, source: source}
+    %__MODULE__{client: client, cache_path: cache_path, data_cells: %{}, source: source}
   end
 
   @doc false
@@ -58,24 +52,26 @@ defmodule SRTM.Client do
     cell_lat = floor(latitude)
     cell_lng = floor(longitude)
 
-    data_cell =
-      Enum.find(data_cells, fn %DataCell{} = dc ->
-        dc.latitude == cell_lat and dc.longitude == cell_lng
-      end)
-
-    case data_cell do
-      %DataCell{} = data_cell -> {:ok, data_cell, client}
-      nil -> download_cell(client, latitude, longitude)
+    with {:ok, data_cell} <- load_cell({cell_lat, cell_lng}, client) do
+      data_cell = %DataCell{data_cell | last_used: DateTime.utc_now()}
+      data_cells = Map.put(data_cells, {cell_lat, cell_lng}, {:ok, data_cell})
+      {:ok, data_cell, %Client{client | data_cells: data_cells}}
     end
   end
 
-  defp download_cell(%Client{source: source} = client, latitude, longitude) do
-    name = to_cell_name(latitude, longitude)
+  defp load_cell({lat, lng}, %Client{data_cells: data_cells, source: source} = client) do
+    Map.get_lazy(data_cells, {lat, lng}, fn ->
+      cell_name = to_cell_name(lat, lng)
+      hgt_file_path = Path.join([client.cache_path, cell_name <> ".hgt"])
 
-    with {:ok, hgt_file} <- source.fetch(client.client, client.cache_path, name),
-         data_cell = DataCell.from_file!(hgt_file) do
-      {:ok, data_cell, %Client{client | data_cells: [data_cell | client.data_cells]}}
-    end
+      if File.exists?(hgt_file_path) do
+        {:ok, DataCell.from_file!(hgt_file_path)}
+      else
+        with {:ok, ^hgt_file_path} <- source.fetch(client.client, client.cache_path, cell_name) do
+          {:ok, DataCell.from_file!(hgt_file_path)}
+        end
+      end
+    end)
   end
 
   defp to_cell_name(lat, lng) do
