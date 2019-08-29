@@ -73,7 +73,7 @@ defmodule SRTM.Client do
       |> Enum.take(keep)
       |> Enum.into(%{})
 
-    {:ok, %Client{data_cells: purged_data_cells}}
+    {:ok, %Client{client | data_cells: purged_data_cells}}
   end
 
   @doc false
