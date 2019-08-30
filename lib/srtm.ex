@@ -17,10 +17,11 @@ defmodule SRTM do
   **Note:**
 
   * Make sure to match on the client to always use the latests client struct.
-  Otherwise SRTM files will be re-downloaded on every call!
+  Otherwise SRTM files will be re-read into memory on every call!
 
   * The SRTM Files are cached in memory. Querying many coordinates at different
-  locations on Earth may therefore take up a lot of memory space.
+  locations on Earth may therefore take up a lot of memory space. See
+  `SRTM.Client.purge_in_memory_cache/2`.
 
   ## Examples
 
