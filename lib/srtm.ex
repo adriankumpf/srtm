@@ -25,8 +25,10 @@ defmodule SRTM do
 
   ## Examples
 
+      iex> {:ok, client} = SRTM.Client.new("./cache")
       iex> {:ok, elevation, client} = SRTM.get_elevation(client, 36.455556, -116.866667)
-      {:ok, -51, %SRTM.client{}}
+      iex> elevation
+      -51
 
   """
   @spec get_elevation(client :: Client.t(), latitude :: float, longitude :: float) ::
