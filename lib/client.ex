@@ -78,7 +78,7 @@ defmodule SRTM.Client do
 
   @doc false
   def get_elevation(%Client{} = client, latitude, longitude)
-      when -56 <= latitude and latitude <= 60 do
+      when -56 < latitude and latitude < 61 do
     with {:ok, %DataCell{} = dc, %Client{} = client} <- get_data_cell(client, latitude, longitude) do
       {:ok, DataCell.get_elevation(dc, latitude, longitude), client}
     end
