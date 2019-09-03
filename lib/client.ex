@@ -100,10 +100,10 @@ defmodule SRTM.Client do
       hgt_file_path = Path.join([client.cache_path, cell_name <> ".hgt"])
 
       if File.exists?(hgt_file_path) do
-        {:ok, DataCell.from_file!(hgt_file_path)}
+        DataCell.from_file(hgt_file_path)
       else
         with {:ok, ^hgt_file_path} <- source.fetch(client.client, client.cache_path, cell_name) do
-          {:ok, DataCell.from_file!(hgt_file_path)}
+          DataCell.from_file(hgt_file_path)
         end
       end
     end)

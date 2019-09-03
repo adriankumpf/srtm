@@ -1,31 +1,27 @@
 defmodule SRTM.DataCell do
   @moduledoc false
 
+  alias SRTM.Error
+
   defstruct [:hgt_data, :latitude, :longitude, :points_per_cell, :last_used]
 
-  @srtm_3 1201 * 1201 * 2
-  @srtm_1 3601 * 3601 * 2
+  def from_file(path) do
+    with {:ok, hgt_data} <- read(path),
+         {:ok, ppc} <- get_ppc(hgt_data) do
+      {lat, lng} =
+        path
+        |> Path.basename(".hgt")
+        |> reverse_coordinates()
 
-  def from_file!(path) do
-    hgt_data = File.read!(path)
+      data_cell = %__MODULE__{
+        hgt_data: hgt_data,
+        latitude: lat,
+        longitude: lng,
+        points_per_cell: ppc
+      }
 
-    ppc =
-      case byte_size(hgt_data) do
-        @srtm_3 -> 1201
-        @srtm_1 -> 3601
-      end
-
-    {lat, lng} =
-      path
-      |> Path.basename(".hgt")
-      |> reverse_coordinates()
-
-    %__MODULE__{
-      hgt_data: hgt_data,
-      latitude: lat,
-      longitude: lng,
-      points_per_cell: ppc
-    }
+      {:ok, data_cell}
+    end
   end
 
   def get_elevation(%__MODULE__{points_per_cell: ppc, hgt_data: hgt_data} = dc, lat, lng) do
@@ -61,5 +57,23 @@ defmodule SRTM.DataCell do
     lng = if d1 == ?W, do: lng * -1, else: lng
 
     {lat, lng}
+  end
+
+  defp read(path) do
+    with {:error, reason} <- File.read(path) do
+      {:error,
+       %Error{reason: :io_error, message: "Reading of HGT file failed: #{inspect(reason)}"}}
+    end
+  end
+
+  @srtm_3 1201 * 1201 * 2
+  @srtm_1 3601 * 3601 * 2
+
+  defp get_ppc(hgt_data) do
+    case byte_size(hgt_data) do
+      @srtm_3 -> {:ok, 1201}
+      @srtm_1 -> {:ok, 3601}
+      _______ -> {:error, %Error{reason: :unkown_file_type, message: "File type unkown"}}
+    end
   end
 end
