@@ -1,18 +1,22 @@
 defmodule SRTM.Source.USGS do
-  @behaviour SRTM.Source
+  use SRTM.Source
   @moduledoc false
 
-  alias SRTM.Error
+  alias SRTM.Client
 
   @list "./priv/list.json"
         |> File.read!()
         |> Jason.decode!()
 
   @impl true
-  def fetch(%Tesla.Client{} = client, path, name) do
-    with {:ok, url} <- find_url(name),
+  def fetch(%Client{}, {lat, _lng}) when not (-56 < lat and lat < 61) do
+    {:error, :out_of_bounds}
+  end
+
+  def fetch(%Client{client: client, cache_path: cache_path}, {lat, lng}) do
+    with {:ok, url} <- name(lat, lng) |> find_url(),
          {:ok, zipped_data} <- get(client, url),
-         {:ok, [hgt_file]} <- unzip(zipped_data, cwd: path) do
+         {:ok, [hgt_file]} <- unzip(zipped_data, cwd: cache_path) do
       {:ok, hgt_file}
     end
   end
@@ -23,30 +27,6 @@ defmodule SRTM.Source.USGS do
       {:error, %Error{reason: :file_not_found, message: "Could not find HGT file: #{name}"}}
     else
       url when is_binary(url) -> {:ok, url}
-    end
-  end
-
-  defp get(client, url) do
-    case Tesla.get(client, url) do
-      {:ok, %Tesla.Env{status: 200, body: body}} ->
-        {:ok, body}
-
-      {:ok, %Tesla.Env{status: status, body: body}} ->
-        {:error,
-         %Error{
-           reason: :download_failed,
-           message: "HGT file download failed: #{status} – #{body}"
-         }}
-
-      {:error, reason} ->
-        {:error, %Error{reason: reason, message: "HTTP request failed"}}
-    end
-  end
-
-  defp unzip(zipped_binary, opts) do
-    with {:error, reason} <- :zip.unzip(zipped_binary, opts) do
-      {:error,
-       %Error{reason: :io_error, message: "Unzipping HGT file failed: #{inspect(reason)}"}}
     end
   end
 end

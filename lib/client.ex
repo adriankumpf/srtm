@@ -6,13 +6,13 @@ defmodule SRTM.Client do
   alias __MODULE__, as: Client
   alias SRTM.{Error, DataCell, Source}
 
-  defstruct [:client, :cache_path, :data_cells, :source]
+  defstruct [:client, :cache_path, :data_cells, :sources]
 
   @opaque t :: %__MODULE__{
             client: Tesla.Client.t(),
             cache_path: String.t(),
             data_cells: map,
-            source: atom
+            sources: list
           }
 
   @doc """
@@ -24,7 +24,8 @@ defmodule SRTM.Client do
 
   The supported options are:
 
-  * `:source` - a SRTM source provifder (defaults to
+  * `:sources` - the SRTM source provifders (defaults to
+    [ESA](http://step.esa.int/auxdata/dem/SRTMGL1/) and
     [USGS](https://dds.cr.usgs.gov/srtm/version2_1/))
 
   ## Examples
@@ -35,17 +36,26 @@ defmodule SRTM.Client do
   """
   @spec new(path :: Path.t(), opts :: list) :: {:ok, t} | {:error, error :: Error.t()}
   def new(path, opts \\ []) do
-    source = Keyword.get(opts, :source, Source.USGS)
+    sources =
+      case Keyword.get(opts, :sources) do
+        [_ | _] = sources -> sources
+        _ -> [Source.ESA, Source.USGS]
+      end
+
     path = Path.expand(path)
 
-    with :ok <- create_dir_if_not_exists(path) do
-      middleware = [
-        {Tesla.Middleware.Headers, [{"user-agent", "github.com/adriankumpf/srtm"}]}
-      ]
+    case File.mkdir_p(path) do
+      {:error, reason} ->
+        {:error, %Error{reason: :io_error, message: "Creation of #{path} failed: #{reason}"}}
 
-      client = Tesla.client(middleware, {Tesla.Adapter.Hackney, recv_timeout: 30_000})
+      :ok ->
+        middleware = [
+          {Tesla.Middleware.Headers, [{"user-agent", "github.com/adriankumpf/srtm"}]}
+        ]
 
-      {:ok, %__MODULE__{client: client, cache_path: path, data_cells: %{}, source: source}}
+        client = Tesla.client(middleware, {Tesla.Adapter.Hackney, recv_timeout: 30_000})
+
+        {:ok, %__MODULE__{client: client, cache_path: path, data_cells: %{}, sources: sources}}
     end
   end
 
@@ -77,77 +87,45 @@ defmodule SRTM.Client do
   end
 
   @doc false
-  def get_elevation(%Client{source: Source.USGS} = client, latitude, _longitude)
-      when not (-56 < latitude and latitude < 61) do
-    {:ok, nil, client}
-  end
-
-  def get_elevation(%Client{source: Source.ESA} = client, latitude, _longitude)
-      when not (-56 < latitude and latitude < 60) do
-    {:ok, nil, client}
-  end
-
   def get_elevation(%Client{} = client, latitude, longitude) do
-    with {:ok, %DataCell{} = dc, %Client{} = client} <- get_data_cell(client, latitude, longitude) do
-      {:ok, DataCell.get_elevation(dc, latitude, longitude), client}
+    case get_data_cell(client, {latitude, longitude}) do
+      {:ok, %DataCell{} = dc, %Client{} = client} ->
+        elevation = DataCell.get_elevation(dc, latitude, longitude)
+        {:ok, elevation, client}
+
+      {:error, :out_of_bounds} ->
+        {:ok, nil, client}
+
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
-  defp get_data_cell(%Client{data_cells: data_cells} = client, latitude, longitude) do
-    cell_lat = floor(latitude)
-    cell_lng = floor(longitude)
+  defp get_data_cell(%Client{data_cells: data_cells, sources: sources} = client, {lat, lng}) do
+    {cell_lat, cell_lng} = {floor(lat), floor(lng)}
 
-    with {:ok, data_cell} <- load_cell({cell_lat, cell_lng}, client) do
+    load_cell = fn ->
+      with {:ok, hgt_path} <- fetch([Source.Cache | sources], [client, {lat, lng}]) do
+        DataCell.from_file(hgt_path)
+      end
+    end
+
+    with {:ok, data_cell} <- Map.get_lazy(data_cells, {lat, lng}, load_cell) do
       data_cell = %DataCell{data_cell | last_used: DateTime.utc_now()}
       data_cells = Map.put(data_cells, {cell_lat, cell_lng}, {:ok, data_cell})
       {:ok, data_cell, %Client{client | data_cells: data_cells}}
     end
   end
 
-  defp load_cell({lat, lng}, %Client{data_cells: data_cells, source: source} = client) do
-    Map.get_lazy(data_cells, {lat, lng}, fn ->
-      cell_name = to_cell_name(lat, lng)
-      hgt_file_path = Path.join([client.cache_path, cell_name <> ".hgt"])
-
-      if File.exists?(hgt_file_path) do
-        DataCell.from_file(hgt_file_path)
-      else
-        with {:ok, ^hgt_file_path} <- source.fetch(client.client, client.cache_path, cell_name) do
-          DataCell.from_file(hgt_file_path)
-        end
-      end
-    end)
-  end
+  defp fetch(sources, args, acc \\ {:error, :unreachable})
+  defp fetch(_sources, _args, {:ok, hgt_file}), do: {:ok, hgt_file}
+  defp fetch([], _args, {:error, reason}), do: {:error, reason}
+  defp fetch([source | rest], args, _acc), do: fetch(rest, args, apply(source, :fetch, args))
 
   defp order_by_date_desc(d0, d1) do
     case DateTime.compare(d0, d1) do
       :gt -> true
       _ -> false
-    end
-  end
-
-  defp to_cell_name(lat, lng) do
-    if(lat >= 0, do: "N", else: "S") <>
-      (lat |> floor() |> abs() |> pad(2)) <>
-      if(lng >= 0, do: "E", else: "W") <>
-      (lng |> floor() |> abs() |> pad(3))
-  end
-
-  defp pad(num, count) do
-    num |> Integer.to_string() |> String.pad_leading(count, "0")
-  end
-
-  defp create_dir_if_not_exists(dir) do
-    if File.exists?(dir) do
-      with {:error, reason} <- File.mkdir_p(dir) do
-        {:error,
-         %Error{
-           reason: :io_error,
-           message: "Creation of the directory #{dir} failed: #{inspect(reason)}"
-         }}
-      end
-    else
-      :ok
     end
   end
 end
