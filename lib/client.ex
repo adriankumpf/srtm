@@ -4,7 +4,7 @@ defmodule SRTM.Client do
   """
 
   alias __MODULE__, as: Client
-  alias SRTM.{Error, DataCell}
+  alias SRTM.{Error, DataCell, Source}
 
   defstruct [:client, :cache_path, :data_cells, :source]
 
@@ -35,7 +35,7 @@ defmodule SRTM.Client do
   """
   @spec new(path :: Path.t(), opts :: list) :: {:ok, t} | {:error, error :: Error.t()}
   def new(path, opts \\ []) do
-    source = Keyword.get(opts, :source, SRTM.Source.USGS)
+    source = Keyword.get(opts, :source, Source.USGS)
     path = Path.expand(path)
 
     with :ok <- create_dir_if_not_exists(path) do
@@ -77,15 +77,20 @@ defmodule SRTM.Client do
   end
 
   @doc false
-  def get_elevation(%Client{} = client, latitude, longitude)
-      when -56 < latitude and latitude < 61 do
+  def get_elevation(%Client{source: Source.USGS} = client, latitude, _longitude)
+      when not (-56 < latitude and latitude < 61) do
+    {:ok, nil, client}
+  end
+
+  def get_elevation(%Client{source: Source.ESA} = client, latitude, _longitude)
+      when not (-56 < latitude and latitude < 60) do
+    {:ok, nil, client}
+  end
+
+  def get_elevation(%Client{} = client, latitude, longitude) do
     with {:ok, %DataCell{} = dc, %Client{} = client} <- get_data_cell(client, latitude, longitude) do
       {:ok, DataCell.get_elevation(dc, latitude, longitude), client}
     end
-  end
-
-  def get_elevation(%Client{} = client, _latitude, _longitude) do
-    {:ok, nil, client}
   end
 
   defp get_data_cell(%Client{data_cells: data_cells} = client, latitude, longitude) do

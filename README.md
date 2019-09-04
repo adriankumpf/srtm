@@ -15,7 +15,7 @@ the earth for elevation data from the NASA Shuttle Radar Topography Mission
 #=> {:ok, %SRTM.Client{}}
 
 {:ok, elevation, client} = SRTM.get_elevation(client, 36.455556, -116.866667)
-#=> {:ok, -51, %SRTM.client{}}
+#=> {:ok, -51, %SRTM.Client{}}
 ```
 
 <!-- MDOC !-->
