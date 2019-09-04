@@ -24,7 +24,7 @@ defmodule SRTM.Client do
 
   The supported options are:
 
-  * `:sources` - the SRTM source provifders (defaults to
+  * `:sources` - the SRTM source providers (defaults to
     [ESA](http://step.esa.int/auxdata/dem/SRTMGL1/) and
     [USGS](https://dds.cr.usgs.gov/srtm/version2_1/))
 
