@@ -53,7 +53,7 @@ defmodule SRTM.Client do
           {Tesla.Middleware.Headers, [{"user-agent", "github.com/adriankumpf/srtm"}]}
         ]
 
-        client = Tesla.client(middleware, {Tesla.Adapter.Hackney, recv_timeout: 30_000})
+        client = Tesla.client(middleware, {Tesla.Adapter.Mint, recv_timeout: 30_000})
 
         {:ok, %__MODULE__{client: client, cache_path: path, data_cells: %{}, sources: sources}}
     end

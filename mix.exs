@@ -24,8 +24,9 @@ defmodule SRTM.MixProject do
 
   defp deps do
     [
-      {:tesla, "~> 1.2"},
-      {:hackney, "~> 1.14"},
+      {:tesla, "~> 1.3"},
+      {:mint, "~> 0.4"},
+      {:castore, "~> 0.1"},
       {:jason, "~> 1.1"}
     ]
   end
