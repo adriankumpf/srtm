@@ -17,4 +17,11 @@ defmodule SRTM.Source.ESA do
       {:ok, hgt_file}
     end
   end
+
+  defp unzip(zipped_binary, opts) do
+    with {:error, reason} <- :zip.unzip(zipped_binary, opts) do
+      {:error,
+       %Error{reason: :io_error, message: "Unzipping HGT file failed: #{inspect(reason)}"}}
+    end
+  end
 end
