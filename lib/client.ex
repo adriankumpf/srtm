@@ -39,7 +39,7 @@ defmodule SRTM.Client do
     sources =
       case Keyword.get(opts, :sources) do
         [_ | _] = sources -> sources
-        _ -> [Source.ESA, Source.USGS]
+        _ -> [Source.AWS, Source.ESA, Source.USGS]
       end
 
     path = Path.expand(path)

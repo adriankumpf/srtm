@@ -29,4 +29,11 @@ defmodule SRTM.Source.USGS do
       url when is_binary(url) -> {:ok, url}
     end
   end
+
+  defp unzip(zipped_binary, opts) do
+    with {:error, reason} <- :zip.unzip(zipped_binary, opts) do
+      {:error,
+       %Error{reason: :io_error, message: "Unzipping HGT file failed: #{inspect(reason)}"}}
+    end
+  end
 end
