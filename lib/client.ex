@@ -25,13 +25,13 @@ defmodule SRTM.Client do
   The supported options are:
 
   * `:sources` - the SRTM source providers (defaults to
-    [AWS](https://registry.opendata.aws/terrain-tiles/) and
+    [AWS](https://registry.opendata.aws/terrain-tiles/),
     [ESA](http://step.esa.int/auxdata/dem/SRTMGL1/) and
     [USGS](https://dds.cr.usgs.gov/srtm/version2_1/))
 
   ## Examples
 
-      iex> SRTM.Client.new("./cache")
+      iex> {:ok, client} = SRTM.Client.new("./cache")
       {:ok, %SRTM.Client{}}
 
   """
@@ -71,7 +71,7 @@ defmodule SRTM.Client do
 
   ## Examples
 
-      iex> SRTM.Client.purge_in_memory_cache(client, keep: 1)
+      iex> {:ok, client} = SRTM.Client.purge_in_memory_cache(client, keep: 1)
       {:ok, %SRTM.Client{}}
   """
   @spec purge_in_memory_cache(client :: t, opts :: list) :: {:ok, t}
