@@ -30,7 +30,7 @@ Add `srtm` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:srtm, "~> 0.4"}
+    {:srtm, "~> 0.5"}
   ]
 end
 ```
