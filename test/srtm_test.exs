@@ -1,9 +1,8 @@
 defmodule SRTMTest do
   use ExUnit.Case
-  # doctest SRTM
 
   test "gets elevation data from USGS" do
-    {:ok, client} = SRTM.Client.new("./cache")
+    {:ok, client} = SRTM.Client.new("./.srtm_cache")
 
     assert {:ok, -51, client} = SRTM.get_elevation(client, 36.455556, -116.866667)
     assert {:ok, 239, client} = SRTM.get_elevation(client, 45.2775, 13.726111)
