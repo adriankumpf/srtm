@@ -35,7 +35,8 @@ defmodule SRTM.MixProject do
     %{
       licenses: ["MIT"],
       maintainers: ["Adrian Kumpf"],
-      links: %{"GitHub" => @url}
+      links: %{"GitHub" => @url},
+      files: ~w(lib data .formatter.exs mix.exs README* LICENSE*)
     }
   end
 

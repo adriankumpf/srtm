@@ -4,7 +4,7 @@ defmodule SRTM.Source.USGS do
 
   alias SRTM.Client
 
-  @list "./priv/list.json"
+  @list "./data/usgs.json"
         |> File.read!()
         |> Jason.decode!()
 
