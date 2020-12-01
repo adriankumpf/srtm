@@ -73,7 +73,7 @@ defmodule SRTM.DataCell do
     case byte_size(hgt_data) do
       @srtm_3 -> {:ok, 1201}
       @srtm_1 -> {:ok, 3601}
-      _______ -> {:error, %Error{reason: :unkown_file_type, message: "File type unkown"}}
+      _ -> {:error, %Error{reason: :unkown_file_type, message: "File type unkown"}}
     end
   end
 end
