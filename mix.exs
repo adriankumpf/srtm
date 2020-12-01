@@ -1,7 +1,7 @@
 defmodule SRTM.MixProject do
   use Mix.Project
 
-  @version "0.5.1"
+  @version "0.5.2"
   @url "https://github.com/adriankumpf/srtm"
 
   def project do
