@@ -12,8 +12,10 @@ defmodule SRTM.Client do
             client: Tesla.Client.t(),
             cache_path: String.t(),
             data_cells: map,
-            sources: list
+            sources: Keyword.t()
           }
+
+  @adapter {Tesla.Adapter.Hackney, pool: :srtm}
 
   @doc """
   Creates a client struct that holds configuration and parsed HGT files.
@@ -28,14 +30,21 @@ defmodule SRTM.Client do
     [AWS](https://registry.opendata.aws/terrain-tiles/),
     [ESA](http://step.esa.int/auxdata/dem/SRTMGL1/) and
     [USGS](https://dds.cr.usgs.gov/srtm/version2_1/))
+  * `:adapter` - the [Tesla adapter](https://hexdoks.pm/tesla/readme.html) for
+    the API client (default: `#{inspect(@adapter)}`)
+  * `:opts` – default opts for all requests (default: `[]`)
 
   ## Examples
 
       iex> {:ok, client} = SRTM.Client.new("./cache")
       {:ok, %SRTM.Client{}}
 
+      iex> finch_adapter = {Tesla.Adapter.Finch, name: MyFinch, receive_timeout: 30_000}
+      iex> {:ok, client} = SRTM.Client.new("./cache", adapter: finch_adapter)
+      {:ok, %SRTM.Client{}}
+
   """
-  @spec new(path :: Path.t(), opts :: list) :: {:ok, t} | {:error, error :: Error.t()}
+  @spec new(path :: Path.t(), opts :: Keyword.t()) :: {:ok, t} | {:error, error :: Error.t()}
   def new(path, opts \\ []) do
     sources =
       case Keyword.get(opts, :sources) do
@@ -50,11 +59,15 @@ defmodule SRTM.Client do
         {:error, %Error{reason: :io_error, message: "Creation of #{path} failed: #{reason}"}}
 
       :ok ->
+        adapter = opts[:adapter] || @adapter
+        opts = opts[:opts] || []
+
         middleware = [
-          {Tesla.Middleware.Headers, [{"user-agent", "github.com/adriankumpf/srtm"}]}
+          {Tesla.Middleware.Headers, [{"user-agent", "github.com/adriankumpf/srtm"}]},
+          {Tesla.Middleware.Opts, opts}
         ]
 
-        client = Tesla.client(middleware, {Tesla.Adapter.Mint, recv_timeout: 30_000})
+        client = Tesla.client(middleware, adapter)
 
         {:ok, %__MODULE__{client: client, cache_path: path, data_cells: %{}, sources: sources}}
     end
@@ -73,8 +86,9 @@ defmodule SRTM.Client do
 
       iex> {:ok, client} = SRTM.Client.purge_in_memory_cache(client, keep: 1)
       {:ok, %SRTM.Client{}}
+
   """
-  @spec purge_in_memory_cache(client :: t, opts :: list) :: {:ok, t}
+  @spec purge_in_memory_cache(client :: t, opts :: Keyword.t()) :: {:ok, t}
   def purge_in_memory_cache(%Client{} = client, opts \\ []) do
     keep = Keyword.get(opts, :keep, 0)
 

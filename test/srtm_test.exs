@@ -1,6 +1,11 @@
 defmodule SRTMTest do
   use ExUnit.Case
 
+  setup_all do
+    Application.ensure_all_started(:hackney)
+    :ok
+  end
+
   test "gets elevation data from USGS" do
     {:ok, client} = SRTM.Client.new("./.srtm_cache")
 

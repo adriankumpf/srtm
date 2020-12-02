@@ -31,7 +31,7 @@ defmodule SRTM do
       -51
 
   """
-  @spec get_elevation(client :: Client.t(), latitude :: float, longitude :: float) ::
-          {:ok, elevation :: float, client :: Client.t()} | {:error, error :: Error.t()}
+  @spec get_elevation(client :: Client.t(), latitude :: number, longitude :: number) ::
+          {:ok, elevation :: integer | nil, client :: Client.t()} | {:error, error :: Error.t()}
   defdelegate get_elevation(client, latitude, longitude), to: Client
 end
