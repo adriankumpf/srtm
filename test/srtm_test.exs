@@ -6,7 +6,7 @@ defmodule SRTMTest do
     :ok
   end
 
-  test "gets elevation data from USGS" do
+  test "gets elevation data" do
     {:ok, client} = SRTM.Client.new("./.srtm_cache")
 
     assert {:ok, -51, client} = SRTM.get_elevation(client, 36.455556, -116.866667)

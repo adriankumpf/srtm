@@ -28,8 +28,7 @@ defmodule SRTM.Client do
 
   * `:sources` - the SRTM source providers (defaults to
     [AWS](https://registry.opendata.aws/terrain-tiles/),
-    [ESA](http://step.esa.int/auxdata/dem/SRTMGL1/) and
-    [USGS](https://dds.cr.usgs.gov/srtm/version2_1/))
+    [ESA](http://step.esa.int/auxdata/dem/SRTMGL1/)
   * `:adapter` - the [Tesla adapter](https://hexdoks.pm/tesla/readme.html) for
     the API client (default: `#{inspect(@adapter)}`)
   * `:opts` – default opts for all requests (default: `[]`)
@@ -46,12 +45,7 @@ defmodule SRTM.Client do
   """
   @spec new(path :: Path.t(), opts :: Keyword.t()) :: {:ok, t} | {:error, error :: Error.t()}
   def new(path, opts \\ []) do
-    sources =
-      case Keyword.get(opts, :sources) do
-        [_ | _] = sources -> sources
-        _ -> [Source.AWS, Source.ESA, Source.USGS]
-      end
-
+    sources = Keyword.get(opts, :sources, [Source.AWS, Source.ESA])
     path = Path.expand(path)
 
     case File.mkdir_p(path) do

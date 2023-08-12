@@ -2,7 +2,7 @@ defmodule SRTM.MixProject do
   use Mix.Project
 
   @version "0.6.0"
-  @github "https://github.com/adriankumpf/srtm"
+  @source_url "https://github.com/adriankumpf/srtm"
 
   def project do
     [
@@ -34,8 +34,8 @@ defmodule SRTM.MixProject do
     %{
       licenses: ["MIT"],
       maintainers: ["Adrian Kumpf"],
-      links: %{"GitHub" => @github, "Changelog" => "#{@github}/blob/master/CHANGELOG.md"},
-      files: ~w(lib data .formatter.exs mix.exs README* LICENSE*)
+      links: %{"GitHub" => @source_url, "Changelog" => "#{@source_url}/blob/master/CHANGELOG.md"},
+      files: ~w(lib mix.exs README.md LICENSE CHANGELOG.md)
     }
   end
 
@@ -48,7 +48,7 @@ defmodule SRTM.MixProject do
     end
 
     args = ["SRTM", @version, Mix.Project.compile_path()]
-    opts = ~w[--main SRTM --source-ref v#{@version} --source-url #{@github}]
+    opts = ~w[--main SRTM --source-ref v#{@version} --source-url #{@source_url}]
     System.cmd(ex_doc, args ++ opts)
     Mix.shell().info("Docs built successfully")
   end
