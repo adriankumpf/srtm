@@ -8,7 +8,7 @@ defmodule SRTM.MixProject do
     [
       app: :srtm,
       version: @version,
-      elixir: "~> 1.9",
+      elixir: "~> 1.10",
       name: "SRTM",
       description:
         "A small library that provides a simple interface to query locations on the earth for elevation data from the NASA Shuttle Radar Topography Mission (SRTM)",
