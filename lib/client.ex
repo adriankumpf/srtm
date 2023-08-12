@@ -9,13 +9,10 @@ defmodule SRTM.Client do
   defstruct [:client, :cache_path, :data_cells, :sources]
 
   @opaque t :: %__MODULE__{
-            client: Tesla.Client.t(),
             cache_path: String.t(),
             data_cells: map,
             sources: Keyword.t()
           }
-
-  @adapter {Tesla.Adapter.Hackney, pool: :srtm}
 
   @doc """
   Creates a client struct that holds configuration and parsed HGT files.
@@ -27,20 +24,14 @@ defmodule SRTM.Client do
   The supported options are:
 
   * `:sources` (list of `t:module/0`) - the SRTM source providers (defaults to `SRTM.Source.AWS` and `SRTM.Source.ESA`)
-  * `:adapter` (`t:module/0`) - the [Tesla adapter](https://hexdoks.pm/tesla/readme.html) for
-    the API client (default: `#{inspect(@adapter)}`)
-  * `:opts` (`t:keyword/0`) – default opts for all requests (default: `[]`)
 
   ## Examples
 
       iex> {:ok, client} = SRTM.Client.new("./cache")
       {:ok, %SRTM.Client{}}
 
-      iex> finch_adapter = {Tesla.Adapter.Finch, name: MyFinch, receive_timeout: 30_000}
-      iex> {:ok, client} = SRTM.Client.new("./cache", adapter: finch_adapter)
-      {:ok, %SRTM.Client{}}
-
   """
+
   @spec new(path :: Path.t(), opts :: Keyword.t()) :: {:ok, t} | {:error, error :: Error.t()}
   def new(path, opts \\ []) do
     sources = Keyword.get(opts, :sources, [Source.AWS, Source.ESA])
@@ -51,17 +42,7 @@ defmodule SRTM.Client do
         {:error, %Error{reason: :io_error, message: "Creation of #{path} failed: #{reason}"}}
 
       :ok ->
-        adapter = opts[:adapter] || @adapter
-        opts = opts[:opts] || []
-
-        middleware = [
-          {Tesla.Middleware.Headers, [{"user-agent", "github.com/adriankumpf/srtm"}]},
-          {Tesla.Middleware.Opts, opts}
-        ]
-
-        client = Tesla.client(middleware, adapter)
-
-        {:ok, %__MODULE__{client: client, cache_path: path, data_cells: %{}, sources: sources}}
+        {:ok, %__MODULE__{cache_path: path, data_cells: %{}, sources: sources}}
     end
   end
 

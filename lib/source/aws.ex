@@ -13,12 +13,12 @@ defmodule SRTM.Source.AWS do
 
   @doc false
   @impl true
-  def fetch(%Client{client: client, cache_path: cache_path}, {lat, lng}) do
+  def fetch(%Client{cache_path: cache_path}, {lat, lng}) do
     <<dir::binary-size(3)>> <> _ = name = name(lat, lng)
     url = "#{@base_url}/#{dir}/#{name}.hgt.gz"
     path = Path.join([cache_path, name <> ".hgt"])
 
-    with {:ok, zipped_data} <- get(client, url),
+    with {:ok, zipped_data} <- get(url),
          data = :zlib.gunzip(zipped_data),
          :ok <- write(path, data) do
       {:ok, path}

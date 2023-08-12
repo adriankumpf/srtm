@@ -14,10 +14,10 @@ defmodule SRTM.Source.ESA do
     {:error, :out_of_bounds}
   end
 
-  def fetch(%Client{client: client, cache_path: cache_path}, {lat, lng}) do
+  def fetch(%Client{cache_path: cache_path}, {lat, lng}) do
     url = "http://step.esa.int/auxdata/dem/SRTMGL1/#{name(lat, lng)}.SRTMGL1.hgt.zip"
 
-    with {:ok, zipped_data} <- get(client, url),
+    with {:ok, zipped_data} <- get(url),
          {:ok, [hgt_file]} <- unzip(zipped_data, cwd: cache_path) do
       {:ok, hgt_file}
     end
