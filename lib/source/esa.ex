@@ -1,8 +1,13 @@
 defmodule SRTM.Source.ESA do
+  @moduledoc """
+  The built-in source for the SRTMGL1 dataset hosted on
+  [esa.int](http://step.esa.int/auxdata/dem/SRTMGL1/).
+  """
+
   use SRTM.Source
-  @moduledoc false
 
   alias SRTM.Client
+  alias SRTM.Error
 
   @impl true
   def fetch(%Client{}, {lat, _lng}) when not (-56 < lat and lat < 60) do

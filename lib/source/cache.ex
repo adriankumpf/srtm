@@ -1,6 +1,7 @@
 defmodule SRTM.Source.Cache do
-  use SRTM.Source
   @moduledoc false
+
+  use SRTM.Source
 
   alias SRTM.Client
 

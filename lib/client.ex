@@ -1,6 +1,6 @@
 defmodule SRTM.Client do
   @moduledoc """
-  This module holds the client for querying elevation data.
+  The client for querying elevation data.
   """
 
   alias __MODULE__, as: Client
@@ -26,12 +26,10 @@ defmodule SRTM.Client do
 
   The supported options are:
 
-  * `:sources` - the SRTM source providers (defaults to
-    [AWS](https://registry.opendata.aws/terrain-tiles/),
-    [ESA](http://step.esa.int/auxdata/dem/SRTMGL1/)
-  * `:adapter` - the [Tesla adapter](https://hexdoks.pm/tesla/readme.html) for
+  * `:sources` (list of `t:module/0`) - the SRTM source providers (defaults to `SRTM.Source.AWS` and `SRTM.Source.ESA`)
+  * `:adapter` (`t:module/0`) - the [Tesla adapter](https://hexdoks.pm/tesla/readme.html) for
     the API client (default: `#{inspect(@adapter)}`)
-  * `:opts` – default opts for all requests (default: `[]`)
+  * `:opts` (`t:keyword/0`) – default opts for all requests (default: `[]`)
 
   ## Examples
 
@@ -82,7 +80,7 @@ defmodule SRTM.Client do
       {:ok, %SRTM.Client{}}
 
   """
-  @spec purge_in_memory_cache(client :: t, opts :: Keyword.t()) :: {:ok, t}
+  @spec purge_in_memory_cache(t, keyword) :: {:ok, t}
   def purge_in_memory_cache(%Client{} = client, opts \\ []) do
     keep = Keyword.get(opts, :keep, 0)
 

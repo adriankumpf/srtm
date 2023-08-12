@@ -1,11 +1,17 @@
 defmodule SRTM.Source.AWS do
+  @moduledoc """
+  The built-in source for the [Terrain Tiles dataset](https://registry.opendata.aws/terrain-tiles/)
+  hosted in Open Data Registry on AWS.
+  """
+
   use SRTM.Source
-  @moduledoc false
 
   alias SRTM.Client
+  alias SRTM.Error
 
   @base_url "https://s3.amazonaws.com/elevation-tiles-prod/skadi"
 
+  @doc false
   @impl true
   def fetch(%Client{client: client, cache_path: cache_path}, {lat, lng}) do
     <<dir::binary-size(3)>> <> _ = name = name(lat, lng)
