@@ -67,18 +67,18 @@ defmodule SRTM.Client do
 
     purged_data_cells =
       client.data_cells
-      |> Enum.sort_by(fn {_, {:ok, %DataCell{last_used: d}}} -> d end, &order_by_date_desc/2)
+      |> Enum.sort_by(fn {_, {:ok, data_cell}} -> data_cell.last_used end, {:desc, DateTime})
       |> Enum.take(keep)
-      |> Enum.into(%{})
+      |> Map.new()
 
-    {:ok, %Client{client | data_cells: purged_data_cells}}
+    {:ok, put_in(client.data_cells, purged_data_cells)}
   end
 
   @doc false
   def get_elevation(%Client{} = client, latitude, longitude) do
     case get_data_cell(client, {latitude, longitude}) do
-      {:ok, %DataCell{} = dc, %Client{} = client} ->
-        elevation = DataCell.get_elevation(dc, latitude, longitude)
+      {:ok, data_cell, client} ->
+        elevation = DataCell.get_elevation(data_cell, latitude, longitude)
         {:ok, elevation, client}
 
       {:error, :out_of_bounds} ->
@@ -89,31 +89,28 @@ defmodule SRTM.Client do
     end
   end
 
-  defp get_data_cell(%Client{data_cells: data_cells, sources: sources} = client, {lat, lng}) do
-    {cell_lat, cell_lng} = {floor(lat), floor(lng)}
-
+  defp get_data_cell(%Client{} = client, {lat, lng}) do
     load_cell = fn ->
-      with {:ok, hgt_path} <- fetch([Source.Cache | sources], [client, {lat, lng}]) do
-        DataCell.from_file(hgt_path)
-      end
+      sources = [Source.Cache | client.sources]
+
+      Enum.reduce_while(sources, nil, fn source, _ ->
+        {source, opts} =
+          case source do
+            {source, opts} -> {source, opts}
+            source -> {source, []}
+          end
+
+        case source.fetch(client, {lat, lng}, opts) do
+          {:ok, hgt_path} -> {:halt, DataCell.from_file(hgt_path)}
+          {:error, reason} -> {:cont, {:error, reason}}
+        end
+      end)
     end
 
-    with {:ok, data_cell} <- Map.get_lazy(data_cells, {lat, lng}, load_cell) do
-      data_cell = %DataCell{data_cell | last_used: DateTime.utc_now()}
-      data_cells = Map.put(data_cells, {cell_lat, cell_lng}, {:ok, data_cell})
-      {:ok, data_cell, %Client{client | data_cells: data_cells}}
-    end
-  end
-
-  defp fetch(sources, args, acc \\ {:error, :unreachable})
-  defp fetch(_sources, _args, {:ok, hgt_file}), do: {:ok, hgt_file}
-  defp fetch([], _args, {:error, reason}), do: {:error, reason}
-  defp fetch([source | rest], args, _acc), do: fetch(rest, args, apply(source, :fetch, args))
-
-  defp order_by_date_desc(d0, d1) do
-    case DateTime.compare(d0, d1) do
-      :gt -> true
-      _ -> false
+    with {:ok, data_cell} <- Map.get_lazy(client.data_cells, {lat, lng}, load_cell) do
+      data_cell = put_in(data_cell.last_used, DateTime.utc_now())
+      client = put_in(client.data_cells[{floor(lat), floor(lng)}], {:ok, data_cell})
+      {:ok, data_cell, client}
     end
   end
 end

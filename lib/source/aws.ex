@@ -9,13 +9,15 @@ defmodule SRTM.Source.AWS do
   alias SRTM.Client
   alias SRTM.Error
 
-  @base_url "https://s3.amazonaws.com/elevation-tiles-prod/skadi"
+  @endpoint "https://s3.amazonaws.com/elevation-tiles-prod/skadi"
 
   @doc false
   @impl true
-  def fetch(%Client{cache_path: cache_path}, {lat, lng}) do
+  def fetch(%Client{cache_path: cache_path}, {lat, lng}, opts) do
+    endpoint = opts[:endpoint] || @endpoint
+
     <<dir::binary-size(3)>> <> _ = name = name(lat, lng)
-    url = "#{@base_url}/#{dir}/#{name}.hgt.gz"
+    url = "#{endpoint}/#{dir}/#{name}.hgt.gz"
     path = Path.join([cache_path, name <> ".hgt"])
 
     with {:ok, zipped_data} <- get(url),

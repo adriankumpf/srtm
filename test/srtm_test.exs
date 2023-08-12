@@ -1,5 +1,5 @@
 defmodule SRTMTest do
-  use ExUnit.Case
+  use SRTM.Case, async: true
 
   @tag :integration
   test "gets elevation data" do
@@ -25,5 +25,73 @@ defmodule SRTMTest do
     {:ok, client} = SRTM.Client.purge_in_memory_cache(client, keep: 1)
 
     assert {:ok, 1294, _client} = SRTM.get_elevation(client, 40.75, -111.883333)
+  end
+
+  defmodule TimeoutSource do
+    use SRTM.Source
+
+    @impl true
+    def fetch(%SRTM.Client{}, {_lat, _lng}, _opts) do
+      {:error, %SRTM.Error{reason: :timeout}}
+    end
+  end
+
+  defmodule ErrorSource do
+    use SRTM.Source
+
+    @impl true
+    def fetch(%SRTM.Client{}, {_lat, _lng}, _opts) do
+      raise "This should not happen!"
+    end
+  end
+
+  @sources [SRTM.Source.AWS]
+  test "gets the elevation from the AWS dataset", %{bypass: bypass, client: client} do
+    expect_hgt_download(bypass)
+
+    assert {:ok, -51, _client} = SRTM.get_elevation(client, 36.455556, -116.866667)
+  end
+
+  @sources [SRTM.Source.ESA]
+  test "gets the elevation from the ESA dataset", %{bypass: bypass, client: client} do
+    expect_hgt_download(bypass)
+
+    assert {:ok, -51, _client} = SRTM.get_elevation(client, 36.455556, -116.866667)
+  end
+
+  @sources [SRTM.Source.ESA]
+  test "returns nil if the source returns :out_of_bounds error", %{client: client} do
+    assert {:ok, nil, _client} = SRTM.get_elevation(client, 61, 0)
+  end
+
+  @sources [TimeoutSource]
+  test "fails if no source could download a dataset file", %{client: client} do
+    assert {:error, %SRTM.Error{reason: :timeout}} =
+             SRTM.get_elevation(client, 36.455556, -116.866667)
+  end
+
+  @sources [TimeoutSource, SRTM.Source.AWS, SRTM.Source.ESA, ErrorSource]
+  test "tries until a source succeeds", %{bypass: bypass, client: client} do
+    bypass
+    |> expect_hgt_download({503, "error"})
+    |> expect_hgt_download()
+
+    assert {:ok, -51, _client} = SRTM.get_elevation(client, 36.455556, -116.866667)
+  end
+
+  @sources []
+  test "looks up file from the cache if no sources are configured", %{client: client} do
+    assert {:error, %SRTM.Error{reason: :not_cached}} =
+             SRTM.get_elevation(client, 36.455556, -116.866667)
+  end
+
+  for source <- [SRTM.Source.AWS, SRTM.Source.ESA] do
+    @sources [source]
+    test "caches HGT files from (source: #{source})", %{bypass: bypass, client: client} do
+      expect_hgt_download(bypass)
+
+      assert {:ok, -51, client} = SRTM.get_elevation(client, 36.455556, -116.866667)
+      assert {:ok, -51, _client} = SRTM.get_elevation(client, 36.455556, -116.866667)
+    end
   end
 end

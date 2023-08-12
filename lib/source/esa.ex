@@ -9,15 +9,17 @@ defmodule SRTM.Source.ESA do
   alias SRTM.Client
   alias SRTM.Error
 
+  @endpoint "http://step.esa.int/auxdata/dem/SRTMGL1"
+
   @impl true
-  def fetch(%Client{}, {lat, _lng}) when not (-56 < lat and lat < 60) do
+  def fetch(%Client{}, {lat, _lng}, _opts) when not (-56 < lat and lat < 60) do
     {:error, :out_of_bounds}
   end
 
-  def fetch(%Client{cache_path: cache_path}, {lat, lng}) do
-    url = "http://step.esa.int/auxdata/dem/SRTMGL1/#{name(lat, lng)}.SRTMGL1.hgt.zip"
+  def fetch(%Client{cache_path: cache_path}, {lat, lng}, opts) do
+    endpoint = opts[:endpoint] || @endpoint
 
-    with {:ok, zipped_data} <- get(url),
+    with {:ok, zipped_data} <- get("#{endpoint}/#{name(lat, lng)}.SRTMGL1.hgt.zip"),
          {:ok, [hgt_file]} <- unzip(zipped_data, cwd: cache_path) do
       {:ok, hgt_file}
     end

@@ -4,7 +4,7 @@
 
 ### Breaking Changes
 
-- Require Elixir 1.10
+- Require Elixir 1.11
 - Remove USGS source
 - Drop `:adapter` and `:opts` option from `SRTM.Client.new/1`
 

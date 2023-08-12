@@ -3,8 +3,18 @@ defmodule SRTM.Source do
   Specifies the API for using a custom SRTM dataset source.
   """
 
-  @callback fetch(SRTM.Client.t(), {SRTM.latitude(), SRTM.longitude()}) ::
-              {:ok, Path.t()} | {:error, SRTM.Error.t()}
+  @type coordinates :: {SRTM.latitude(), SRTM.longitude()}
+  @type opts :: keyword()
+
+  @doc """
+  Downloads the HGT file for the given coordinates and stores it under the given
+  `client.cache_path`.
+
+  If successful, returns an ok tuple with the path to the file. Otherwise returns an error tuple
+  with an `SRTM.Error.t()` or `:out_of_bounds`.
+  """
+  @callback fetch(SRTM.Client.t(), coordinates, opts()) ::
+              {:ok, Path.t()} | {:error, SRTM.Error.t() | :out_of_bounds}
 
   defmacro __using__(_opts) do
     quote do
@@ -25,7 +35,7 @@ defmodule SRTM.Source do
   defp pad(num, count), do: num |> Integer.to_string() |> String.pad_leading(count, "0")
 
   @doc false
-  def get(url) do
+  def get(url, opts \\ []) do
     Application.ensure_all_started(:ssl)
     Application.ensure_all_started(:httpc)
     Application.ensure_all_started(:inets)
@@ -45,7 +55,7 @@ defmodule SRTM.Source do
     request = {String.to_charlist(url), headers}
 
     http_options = [
-      timeout: 60_000,
+      timeout: opts[:timeout] || 60_000,
       ssl:
         [
           verify: :verify_peer,
@@ -64,13 +74,10 @@ defmodule SRTM.Source do
 
       {:ok, {{_protocol, status_code, _status_message}, _headers, body}} ->
         message =
-          "Failed to download HGT file from '#{url}' (reason: status_code = #{status_code}, body = #{body})."
+          "Failed to download HGT file from '#{url}' " <>
+            "(reason: status_code = #{status_code}, body = #{body})."
 
         {:error, %SRTM.Error{reason: :download_failed, message: message}}
-
-      {:error, reason} when reason in [:timeout, :connect_timeout] ->
-        message = "Unable to download HGT file from '#{url}' due to a timeout."
-        {:error, %SRTM.Error{reason: reason, message: message}}
 
       {:error, reason} ->
         message = "Failed to download HGT file from '#{url}' (reason: #{inspect(reason)})."
