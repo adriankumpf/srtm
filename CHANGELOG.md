@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.7.0 (2023-08-13)
+
+### Breaking Changes
+
+- Require Elixir 1.10
+- Remove USGS source
+- Drop `:adapter` and `:opts` option from `SRTM.Client.new/1`
+
+### Changes
+
+- Replace hackney with httpc
+- Update documentation
+- Add CI workflow
+
 ## v0.6.0 (2020-12-02)
 
 ### Breaking Changes
