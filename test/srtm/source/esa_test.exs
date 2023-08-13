@@ -17,7 +17,7 @@ defmodule SRTM.Source.ESATest do
   test "returns error if coordinates are out of bounds", %{bypass: bypass, client: client} do
     {lower_boundary, upper_boundary} = {-56, 60}
 
-    for coords <- [{lower_boundary - 0.1, 12}, {upper_boundary + 0.1, 12}] do
+    for coords <- [{lower_boundary, 12}, {upper_boundary, 12}] do
       assert {:error, :out_of_bounds} =
                ESA.fetch(client, coords, endpoint: "http://localhost:#{bypass.port}/")
     end
