@@ -38,13 +38,14 @@ defmodule SRTM.SourceTest do
     end
 
     test "handles timeouts", %{bypass: bypass} do
-      assert {:error, srtm_error} = Source.get("http://localhost:#{bypass.port}/foo", timeout: 0)
+      Bypass.down(bypass)
 
-      assert srtm_error.reason in [
+      assert {:error, srtm_error} =
+               Source.get("http://localhost:#{bypass.port}/foo", timeout: 0)
+
+      assert srtm_error.reason ==
                {:failed_connect,
-                [{:to_address, {~c"localhost", bypass.port}}, {:inet, [:inet], :timeout}]},
-               :timeout
-             ]
+                [{:to_address, {~c"localhost", bypass.port}}, {:inet, [:inet], :timeout}]}
 
       assert """
              Failed to download HGT file from 'http://localhost:#{bypass.port}/foo' \
