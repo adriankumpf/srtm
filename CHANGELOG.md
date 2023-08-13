@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.8.0 (2023-08-14)
+
+### Breaking Changes
+
+- Remove `SRTM.Client`
+- Remove `SRTM.Client.purge_in_memory_cache/2`
+- Add in-memory cache backend by `:persistent_term`
+- Add `:disk_cache_enabled`, `:disk_cache_path`, `:in_memory_cache_enabled` and `:in_memory_cache_module` options to `SRTM.get_elevation/3`
+
 ## v0.7.0 (2023-08-13)
 
 ### Breaking Changes
