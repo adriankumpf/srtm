@@ -13,7 +13,7 @@ Add `srtm` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:srtm, "~> 0.6"},
+    {:srtm, "~> 0.7"},
   ]
 end
 ```
@@ -21,11 +21,11 @@ end
 ## Examples
 
 ```elixir
-{:ok, client} = SRTM.Client.new("./cache")
-#=> {:ok, %SRTM.Client{}}
+iex> {:ok, client} = SRTM.Client.new("./cache")
+{:ok, %SRTM.Client{}}
 
-{:ok, elevation, client} = SRTM.get_elevation(client, 36.455556, -116.866667)
-#=> {:ok, -51, %SRTM.Client{}}
+iex> {:ok, elevation, client} = SRTM.get_elevation(client, 36.455556, -116.866667)
+{:ok, -51, %SRTM.Client{}}
 ```
 
 See the [documentation](https://hexdocs.pm/srtm) for further information on configuration.
