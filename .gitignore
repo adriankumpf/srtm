@@ -22,5 +22,5 @@ erl_crash.dump
 # Ignore package tarball (built via "mix hex.build").
 srtm-*.tar
 
-/.srtm_cache
+/srtm_cache
 /tmp

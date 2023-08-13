@@ -31,7 +31,8 @@ defmodule SRTM.MixProject do
     [
       {:castore, "~> 1.0", optional: true},
       {:ex_doc, "~> 0.27", only: :dev, runtime: false},
-      {:bypass, "~> 2.1", only: :test}
+      {:bypass, "~> 2.1", only: :test},
+      {:benchee, "~> 1.0", only: :dev}
     ]
   end
 
@@ -51,7 +52,8 @@ defmodule SRTM.MixProject do
       source_url: @source_url,
       main: "readme",
       groups_for_modules: [
-        Sources: ~r/Source/
+        Sources: ~r/Source/,
+        Caches: ~r/Cache/
       ],
       skip_undefined_reference_warnings_on: ~w(CHANGELOG.md README.md)
     ]

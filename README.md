@@ -21,11 +21,8 @@ end
 ## Examples
 
 ```elixir
-iex> {:ok, client} = SRTM.Client.new("./cache")
-{:ok, %SRTM.Client{}}
-
-iex> {:ok, elevation, client} = SRTM.get_elevation(client, 36.455556, -116.866667)
-{:ok, -51, %SRTM.Client{}}
+iex> SRTM.get_elevation(36.455556, -116.866667)
+{:ok, -51}
 ```
 
 See the [documentation](https://hexdocs.pm/srtm) for further information on configuration.

@@ -1,20 +1,21 @@
 defmodule SRTM.DataCell do
-  @moduledoc false
+  @moduledoc """
+  Encapsulates an parsed HGT file.
+  """
 
   alias SRTM.Error
 
+  @opaque t :: %__MODULE__{}
+
   defstruct [:hgt_data, :latitude, :longitude, :points_per_cell, :last_used]
 
-  def from_file(path) do
-    with {:ok, hgt_data} <- read(path),
-         {:ok, ppc} <- get_ppc(hgt_data) do
-      {lat, lng} =
-        path
-        |> Path.basename(".hgt")
-        |> reverse_coordinates()
+  @doc false
+  def new(name, data) do
+    with {:ok, ppc} <- get_ppc(data) do
+      {lat, lng} = reverse_coordinates(name)
 
       data_cell = %__MODULE__{
-        hgt_data: hgt_data,
+        hgt_data: data,
         latitude: lat,
         longitude: lng,
         points_per_cell: ppc
@@ -24,6 +25,12 @@ defmodule SRTM.DataCell do
     end
   end
 
+  @spec to_binary(t) :: binary()
+  def to_binary(%__MODULE__{} = data_cell) do
+    data_cell.hgt_data
+  end
+
+  @doc false
   def get_elevation(%__MODULE__{points_per_cell: ppc, hgt_data: hgt_data} = dc, lat, lng) do
     row = trunc((dc.latitude + 1 - lat) * (ppc - 1))
     col = trunc((lng - dc.longitude) * (ppc - 1))
@@ -57,13 +64,6 @@ defmodule SRTM.DataCell do
     lng = if d1 == ?W, do: lng * -1, else: lng
 
     {lat, lng}
-  end
-
-  defp read(path) do
-    with {:error, reason} <- File.read(path) do
-      {:error,
-       %Error{reason: :io_error, message: "Reading of HGT file failed: #{inspect(reason)}"}}
-    end
   end
 
   @srtm_3 1201 * 1201 * 2

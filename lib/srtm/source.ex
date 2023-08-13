@@ -1,20 +1,13 @@
 defmodule SRTM.Source do
   @moduledoc """
-  Specifies the API for using a custom SRTM dataset source.
+  Specifies the API for using an SRTM dataset source.
   """
-
-  @type coordinates :: {SRTM.latitude(), SRTM.longitude()}
-  @type opts :: keyword()
 
   @doc """
-  Downloads the HGT file for the given coordinates and stores it under the given
-  `client.cache_path`.
-
-  If successful, returns an ok tuple with the path to the file. Otherwise returns an error tuple
-  with an `SRTM.Error.t()` or `:out_of_bounds`.
+  Downloads an HGT file.
   """
-  @callback fetch(SRTM.Client.t(), coordinates, opts()) ::
-              {:ok, Path.t()} | {:error, SRTM.Error.t() | :out_of_bounds}
+  @callback fetch(hgt_name :: String.t(), opts :: keyword()) ::
+              {:ok, binary()} | {:error, SRTM.Error.t()}
 
   defmacro __using__(_opts) do
     quote do
@@ -23,16 +16,6 @@ defmodule SRTM.Source do
       import SRTM.Source
     end
   end
-
-  @doc false
-  def name(lat, lng) do
-    if(lat >= 0, do: "N", else: "S") <>
-      (lat |> floor() |> abs() |> pad(2)) <>
-      if(lng >= 0, do: "E", else: "W") <>
-      (lng |> floor() |> abs() |> pad(3))
-  end
-
-  defp pad(num, count), do: num |> Integer.to_string() |> String.pad_leading(count, "0")
 
   @doc false
   def get(url, opts \\ []) do

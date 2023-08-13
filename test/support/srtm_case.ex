@@ -14,16 +14,17 @@ defmodule SRTM.Case do
   setup %{tmp_dir: tmp_dir, registered: registered} do
     bypass = Bypass.open()
 
-    client_opts =
-      if sources = registered.sources do
-        [sources: Enum.map(sources, &{&1, endpoint: "http://localhost:#{bypass.port}"})]
+    opts = [disk_cache_path: tmp_dir]
+
+    opts =
+      if registered.sources do
+        sources = Enum.map(registered.sources, &{&1, endpoint: "http://localhost:#{bypass.port}"})
+        Keyword.put(opts, :sources, sources)
       else
-        []
+        opts
       end
 
-    {:ok, client} = SRTM.Client.new(tmp_dir, client_opts)
-
-    %{client: client, bypass: bypass}
+    %{opts: opts, bypass: bypass}
   end
 
   def expect_hgt_download(bypass, response \\ nil) do

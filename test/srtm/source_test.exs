@@ -3,13 +3,6 @@ defmodule SRTM.SourceTest do
 
   alias SRTM.Source
 
-  describe "name/2" do
-    test "returns the HGT file name for the given coordinates" do
-      assert "N12W043" = Source.name(12.3456, -42.0001)
-      assert "S55E112" = Source.name(-54.321, 112.0001)
-    end
-  end
-
   describe "get/2" do
     test "issues a GET request", %{bypass: bypass} do
       Bypass.expect_once(bypass, fn %Plug.Conn{} = conn ->
