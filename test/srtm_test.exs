@@ -19,7 +19,6 @@ defmodule SRTMTest do
     assert {:ok, 2435} = SRTM.get_elevation(-83.755023, 3.016760)
     assert {:ok, 368} = SRTM.get_elevation(-48.954253, 68.990165)
     assert {:ok, nil} = SRTM.get_elevation(2.984654, 59.686144)
-
     assert {:ok, 1294} = SRTM.get_elevation(40.75, -111.883333)
   end
 
@@ -38,6 +37,37 @@ defmodule SRTMTest do
     @impl true
     def fetch(_hgt_name, _opts) do
       raise "This should not happen!"
+    end
+  end
+
+  defmodule FetchableTestCache do
+    @behaviour SRTM.Cache
+
+    @impl true
+    def fetch(_id) do
+      name = "N36W117"
+      data = "test/data/N36/#{name}.hgt.gz" |> File.read!() |> :zlib.gunzip()
+      SRTM.DataCell.new(name, data)
+    end
+
+    @impl true
+    def store(_identifier, _data_cell) do
+      raise "unimplemented!"
+    end
+  end
+
+  defmodule StorableTestCache do
+    @behaviour SRTM.Cache
+
+    @impl true
+    def fetch(_id) do
+      :error
+    end
+
+    @impl true
+    def store(identifier, data_cell) do
+      send(:srtm_test, {:store, identifier, data_cell})
+      :ok
     end
   end
 
@@ -100,5 +130,30 @@ defmodule SRTMTest do
         ] do
       assert {:ok, -51} = SRTM.get_elevation(@lat, @lng, opts)
     end
+  end
+
+  @sources [SRTM.Source.AWS]
+  test "allows customizing the in-memory cache module", %{bypass: bypass, opts: opts} do
+    Process.register(self(), :srtm_test)
+
+    opts =
+      Keyword.merge(opts,
+        in_memory_cache_module: FetchableTestCache,
+        disk_cache_enabled: false
+      )
+
+    assert {:ok, -51} = SRTM.get_elevation(@lat, @lng, opts)
+
+    expect_hgt_download(bypass)
+
+    opts =
+      Keyword.merge(opts,
+        in_memory_cache_module: StorableTestCache,
+        disk_cache_enabled: false
+      )
+
+    assert {:ok, -51} = SRTM.get_elevation(@lat, @lng, opts)
+    assert_received {:store, identifier, %SRTM.DataCell{}}
+    assert "N36W117.hgt" == Path.basename(identifier)
   end
 end
