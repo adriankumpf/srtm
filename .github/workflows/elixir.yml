@@ -8,7 +8,7 @@ on:
 
 jobs:
   mix_test:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     env:
       MIX_ENV: test
 
@@ -24,7 +24,7 @@ jobs:
             lint: lint
           - pair:
               elixir: "1.11.4"
-              otp: "21.3"
+              otp: "24.3.4"
     steps:
       - uses: actions/checkout@v3
 
