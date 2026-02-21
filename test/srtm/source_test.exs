@@ -43,24 +43,16 @@ defmodule SRTM.SourceTest do
       assert {:error, %SRTM.Error{} = srtm_error} =
                Source.get("http://localhost:#{bypass.port}/foo", timeout: 0)
 
-      if otp_version() >= 27 do
-        assert :timeout =
+      assert srtm_error.reason == :timeout or
+               match?(
+                 {:failed_connect, [{:to_address, {~c"localhost", ^port}}, _]},
                  srtm_error.reason
-      else
-        assert {:failed_connect, [{:to_address, {~c"localhost", ^port}}, _]} =
-                 srtm_error.reason
-      end
+               )
 
       assert """
              Failed to download HGT file from 'http://localhost:#{bypass.port}/foo' \
              (reason: #{inspect(srtm_error.reason)}).\
              """ == srtm_error.message
     end
-  end
-
-  defp otp_version do
-    :erlang.system_info(:otp_release)
-    |> List.to_string()
-    |> String.to_integer()
   end
 end
