@@ -13,13 +13,15 @@ Benchee.run(
   %{
     "file cache" => fn ->
       Enum.map(coordinates, fn {lat, lng} ->
-        {:ok, elevation} = SRTM.get_elevation(lat, lng, caches: [SRTM.Cache.File], sources: [])
+        {:ok, elevation} =
+          SRTM.get_elevation(lat, lng, sources: [], in_memory_cache_enabled: false)
+
         elevation
       end)
     end,
     "in-memory cache" => fn ->
       Enum.map(coordinates, fn {lat, lng} ->
-        {:ok, elevation} = SRTM.get_elevation(lat, lng, sources: [])
+        {:ok, elevation} = SRTM.get_elevation(lat, lng, sources: [], disk_cache_enabled: false)
         elevation
       end)
     end
