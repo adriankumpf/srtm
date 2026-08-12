@@ -27,7 +27,7 @@ defmodule SRTMTest do
 
     @impl true
     def fetch(_hgt_name, _opts) do
-      {:error, %SRTM.Error{reason: :timeout}}
+      {:error, %SRTM.Error{reason: :timeout, message: "timed out"}}
     end
   end
 
