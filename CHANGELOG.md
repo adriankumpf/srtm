@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Breaking Changes
+
+- Require Elixir 1.15 or later
+
 ## v0.8.0 (2023-08-14)
 
 ### Breaking Changes
