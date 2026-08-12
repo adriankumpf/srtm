@@ -19,10 +19,6 @@ defmodule SRTM.Source do
 
   @doc false
   def get(url, opts \\ []) do
-    Application.ensure_all_started(:ssl)
-    Application.ensure_all_started(:httpc)
-    Application.ensure_all_started(:inets)
-
     headers = [
       {~c"Host", String.to_charlist(URI.parse(url).host)},
       {~c"User-Agent", ~c"github.com/adriankumpf/srtm"}
