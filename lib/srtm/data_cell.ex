@@ -7,7 +7,7 @@ defmodule SRTM.DataCell do
 
   @opaque t :: %__MODULE__{}
 
-  defstruct [:hgt_data, :latitude, :longitude, :points_per_cell, :last_used]
+  defstruct [:hgt_data, :latitude, :longitude, :points_per_cell]
 
   @doc false
   def new(name, data) do
