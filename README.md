@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/adriankumpf/srtm/actions/workflows/elixir.yml/badge.svg)](https://github.com/adriankumpf/srtm/actions/workflows/elixir.yml)
 [![Docs](https://img.shields.io/badge/hex-docs-green.svg?style=flat)](https://hexdocs.pm/srtm)
-[![Hex.pm](https://img.shields.io/hexpm/v/srtm?color=%23714a94)](http://hex.pm/packages/srtm)
+[![Hex.pm](https://img.shields.io/hexpm/v/srtm?color=%23714a94)](https://hex.pm/packages/srtm)
 
 A small library that provides a simple interface to query locations on the Earth for elevation data from the NASA Shuttle Radar Topography Mission (SRTM).
 
