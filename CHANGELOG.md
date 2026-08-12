@@ -10,6 +10,8 @@
 ### Changes
 
 - Fetch the SRTMGL1 dataset in `SRTM.Source.ESA` over HTTPS instead of HTTP
+- Store each HGT file under its own `:persistent_term` key, so inserts no longer rewrite the whole
+  cache or trigger a global garbage collection
 - Pass source options through to the HTTP request, making `:timeout` usable via
   `sources: [{SRTM.Source.AWS, timeout: 5_000}]`
 - Make `SRTM.DataCell.new/2` and `SRTM.DataCell.to_binary/1` public, so `SRTM.Cache`

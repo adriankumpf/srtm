@@ -2,34 +2,34 @@ defmodule SRTM.Cache.PersistentTerm do
   @moduledoc """
   The built-in in-memory cache backed by `:persistent_term`.
 
-  When the cache is deleted (using `purge/0`) or data is inserted, a global garbage collection is
-  initiated. It works like this:
+  Every HGT file is stored under its own key, so adding one neither rewrites the rest of the cache
+  nor triggers a global garbage collection. Erasing a key does, and `purge/0` erases one per cached
+  file:
 
-  - All processes in the system will be scheduled to run a scan of their heaps for the cache that
-  has been deleted/updated. While such scan is relatively light-weight, **if there are many
-  processes, the system can become less responsive until all processes have scanned their heaps**.
+  - All processes in the system will be scheduled to run a scan of their heaps for the term that
+  has been erased. While such scan is relatively light-weight, **if there are many processes, the
+  system can become less responsive until all processes have scanned their heaps**.
 
-  - If the deleted/updated cache (or any part of it) is still used by a process, that process will
-  do a **major (fullsweep) garbage collection** and copy the term into the process. However, at most
-  two processes at a time will be scheduled to do that kind of garbage collection.
+  - If the erased term is still used by a process, that process will do a **major (fullsweep)
+  garbage collection** and copy the term into the process. However, at most two processes at a time
+  will be scheduled to do that kind of garbage collection.
 
   See the [persistent_term docs](https://www.erlang.org/doc/man/persistent_term) for further information.
   """
 
   @behaviour SRTM.Cache
 
-  @cache __MODULE__
-
   @impl true
   def fetch(id) do
-    data_cells = :persistent_term.get(@cache, %{})
-    Map.fetch(data_cells, id)
+    case :persistent_term.get({__MODULE__, id}, :error) do
+      :error -> :error
+      data_cell -> {:ok, data_cell}
+    end
   end
 
   @impl true
   def store(id, data_cell) do
-    data_cells = :persistent_term.get(@cache, %{})
-    :persistent_term.put(@cache, Map.put(data_cells, id, data_cell))
+    :persistent_term.put({__MODULE__, id}, data_cell)
   end
 
   @doc """
@@ -43,7 +43,10 @@ defmodule SRTM.Cache.PersistentTerm do
   """
   @spec purge :: :ok
   def purge do
-    :persistent_term.erase(@cache)
+    for {{__MODULE__, _id} = key, _data_cell} <- :persistent_term.get() do
+      :persistent_term.erase(key)
+    end
+
     :ok
   end
 end
