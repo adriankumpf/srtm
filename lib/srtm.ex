@@ -36,16 +36,16 @@ defmodule SRTM do
   ## Examples
 
       iex> SRTM.get_elevation(36.455556, -116.866667)
-      {:ok, -51}}
+      {:ok, -51}
 
   ## Configuration
 
-  - `:disk_cache_enabled` (`t:boolean/0`) - whehter the disk cache is enabled.
+  - `:disk_cache_enabled` (`t:boolean/0`) - whether the disk cache is enabled.
 
   - `:disk_cache_path` (`t:Path.t/0`) - the path to the directory where the downloaded HGT files are
     stored. Defaults to `#{@default_cache_path}`.
 
-  - `:in_memory_cache_enabled` (`t:boolean/0`) - whehter the in-memory cache is enabled.
+  - `:in_memory_cache_enabled` (`t:boolean/0`) - whether the in-memory cache is enabled.
 
       > #### Note {: .warning}
       >
