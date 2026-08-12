@@ -1,14 +1,14 @@
 defmodule SRTM.Source.ESA do
   @moduledoc """
   The built-in source for the SRTMGL1 dataset hosted on
-  [esa.int](http://step.esa.int/auxdata/dem/SRTMGL1/).
+  [esa.int](https://step.esa.int/auxdata/dem/SRTMGL1/).
   """
 
   use SRTM.Source
 
   alias SRTM.Error
 
-  @endpoint "http://step.esa.int/auxdata/dem/SRTMGL1"
+  @endpoint "https://step.esa.int/auxdata/dem/SRTMGL1"
 
   @impl true
   def fetch(hgt_name, opts) do
