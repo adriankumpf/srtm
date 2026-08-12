@@ -59,7 +59,7 @@ defmodule SRTM.Source do
   end
 
   # OS certificate stores require OTP 25 or later.
-  if System.otp_release() >= "25" do
+  if String.to_integer(System.otp_release()) >= 25 do
     defp os_cacert_option do
       case :public_key.cacerts_load() do
         :ok ->
