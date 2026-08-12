@@ -36,23 +36,13 @@ defmodule SRTM.DataCell do
     col = trunc((lng - dc.longitude) * (ppc - 1))
     byte_pos = (row * ppc + col) * 2
 
-    cond do
-      byte_pos < 0 or byte_pos > ppc * ppc * 2 ->
-        raise "Coordinates out of range"
-
-      byte_pos >= byte_size(hgt_data) ->
-        nil
-
-      :binary.at(hgt_data, byte_pos) == 0x80 && :binary.at(hgt_data, byte_pos + 1) == 0x00 ->
-        nil
-
-      true ->
-        hgt_data
-        |> binary_part(byte_pos, 2)
-        |> decode_elevation()
+    if byte_pos >= 0 and byte_pos < byte_size(hgt_data) do
+      hgt_data |> binary_part(byte_pos, 2) |> decode_elevation()
     end
   end
 
+  # Voids are encoded as -32768. Samples outside the range of the Earth's terrain are treated as
+  # voids as well, since they can only stem from corrupt data.
   defp decode_elevation(<<val::signed-big-integer-size(16)>>) when val in -1000..10000, do: val
   defp decode_elevation(_binary), do: nil
 
