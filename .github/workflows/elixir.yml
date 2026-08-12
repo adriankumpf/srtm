@@ -27,12 +27,13 @@ jobs:
       matrix:
         include:
           - pair:
-              elixir: "1.18.0"
-              otp: "27"
+              elixir: "1.20"
+              otp: "29"
             lint: lint
+          # oldest pair allowed by `elixir: "~> 1.15"` in mix.exs
           - pair:
               elixir: "1.15"
-              otp: "25.3.2"
+              otp: "25"
     steps:
       - uses: actions/checkout@v7
         with:
