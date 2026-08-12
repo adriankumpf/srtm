@@ -48,7 +48,7 @@ defmodule SRTM.MixProject do
   defp docs do
     [
       extras: ~w(CHANGELOG.md README.md),
-      source_ref: "#{@version}",
+      source_ref: "v#{@version}",
       source_url: @source_url,
       main: "readme",
       groups_for_modules: [
