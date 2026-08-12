@@ -16,7 +16,7 @@ defmodule SRTM.MixProject do
       deps: deps(),
       package: package(),
       docs: docs(),
-      xref: [exclude: [CAStore]]
+      elixirc_options: [no_warn_undefined: [CAStore]]
     ]
   end
 
