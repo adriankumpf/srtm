@@ -2,6 +2,11 @@ defmodule SRTM.Source.ESA do
   @moduledoc """
   The built-in source for the SRTMGL1 dataset hosted on
   [esa.int](https://step.esa.int/auxdata/dem/SRTMGL1/).
+
+  These are the raw SRTMGL1 tiles: they span 60°N to 56°S, the extent of the shuttle's orbit, and
+  there are none over open water. Lookups outside that coverage fail with a `:download_failed`
+  error, so this source works best behind one that covers the whole globe, such as
+  `SRTM.Source.AWS`.
   """
 
   use SRTM.Source
