@@ -44,49 +44,49 @@ defmodule SRTM.Source do
 
   # https://erlef.github.io/security-wg/secure_coding_and_deployment_hardening/inets
   defp ssl_options do
+    cacerts =
+      if Code.ensure_loaded?(CAStore) do
+        [cacertfile: String.to_charlist(CAStore.file_path())]
+      else
+        os_cacert_option()
+      end
+
     [
       verify: :verify_peer,
       depth: 3,
       customize_hostname_check: [match_fun: :public_key.pkix_verify_hostname_match_fun(:https)]
-    ] ++ cacert_option()
+    ] ++ cacerts
   end
 
+  # OS certificate stores require OTP 25 or later.
   if System.otp_release() >= "25" do
-    defp cacert_option do
-      if Code.ensure_loaded?(CAStore) do
-        [cacertfile: String.to_charlist(CAStore.file_path())]
-      else
-        case :public_key.cacerts_load() do
-          :ok ->
-            [cacerts: :public_key.cacerts_get()]
+    defp os_cacert_option do
+      case :public_key.cacerts_load() do
+        :ok ->
+          [cacerts: :public_key.cacerts_get()]
 
-          {:error, reason} ->
-            raise SRTM.Error,
-              message: """
-              Failed to load OS certificates. We tried to use OS certificates because we
-              couldn't find the :castore library. If you want to use :castore, please add
-                {:castore, "~> 1.0"}
-              to your dependencies. Otherwise, make sure you can load OS certificates by
-              running :public_key.cacerts_load() and checking the result. The error we
-              got was:
-                #{inspect(reason)}
-              """
-        end
+        {:error, reason} ->
+          raise SRTM.Error,
+            message: """
+            Failed to load OS certificates. We tried to use OS certificates because we
+            couldn't find the :castore library. If you want to use :castore, please add
+              {:castore, "~> 1.0"}
+            to your dependencies. Otherwise, make sure you can load OS certificates by
+            running :public_key.cacerts_load() and checking the result. The error we
+            got was:
+              #{inspect(reason)}
+            """
       end
     end
   else
-    defp cacert_option do
-      if Code.ensure_loaded?(CAStore) do
-        [cacertfile: String.to_charlist(CAStore.file_path())]
-      else
-        raise SRTM.Error,
-          message: """
-          Failed to use any SSL certificates. We didn't find the :castore library,
-          and we couldn't use OS certificates because that requires OTP 25 or later.
-          If you want to use :castore, please add
-            {:castore, "~> 1.0"}
-          """
-      end
+    defp os_cacert_option do
+      raise SRTM.Error,
+        message: """
+        Failed to use any SSL certificates. We didn't find the :castore library,
+        and we couldn't use OS certificates because that requires OTP 25 or later.
+        If you want to use :castore, please add
+          {:castore, "~> 1.0"}
+        """
     end
   end
 end
