@@ -43,18 +43,14 @@ jobs:
           elixir-version: ${{ matrix.elixir }}
           otp-version: ${{ matrix.otp }}
 
-      - name: Cache compiled build and deps
-        id: cache-build
+      - name: Cache deps and _build
         uses: actions/cache@v6
-        env:
-          cache-name: cache-compiled-build-and-deps
         with:
           path: |
-            _build
             deps
-          key: ${{ runner.os }}-mix-${{ env.cache-name }}-${{ matrix.elixir }}-${{ matrix.otp }}-${{ hashFiles('**/mix.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-mix-${{ env.cache-name }}-${{ matrix.elixir }}-${{ matrix.otp }}-
+            _build
+          key: mix-${{ runner.os }}-${{ steps.beam.outputs.elixir-version }}-${{ steps.beam.outputs.otp-version }}-${{ hashFiles('mix.lock') }}
+          restore-keys: mix-${{ runner.os }}-${{ steps.beam.outputs.elixir-version }}-${{ steps.beam.outputs.otp-version }}-
 
       - run: mix deps.get
 
