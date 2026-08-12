@@ -4,7 +4,7 @@ defmodule SRTM.Error do
   """
 
   @type t :: %__MODULE__{
-          reason: atom,
+          reason: atom() | tuple(),
           message: String.t()
         }
 
