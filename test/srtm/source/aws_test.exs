@@ -9,4 +9,11 @@ defmodule SRTM.Source.AWSTest do
     assert {:ok, <<5, 161, 5, 160, 5, 159>> <> _} =
              AWS.fetch("N36W117", endpoint: "http://localhost:#{bypass.port}/")
   end
+
+  test "returns an error if the response isn't gzipped", %{bypass: bypass} do
+    expect_hgt_download(bypass, {200, "<html>captive portal</html>"})
+
+    assert {:error, %SRTM.Error{reason: :invalid_archive}} =
+             AWS.fetch("N36W117", endpoint: "http://localhost:#{bypass.port}/")
+  end
 end
