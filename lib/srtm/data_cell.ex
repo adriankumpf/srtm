@@ -31,9 +31,11 @@ defmodule SRTM.DataCell do
   end
 
   @doc false
-  def get_elevation(%__MODULE__{points_per_cell: ppc, hgt_data: hgt_data} = dc, lat, lng) do
-    row = trunc((dc.latitude + 1 - lat) * (ppc - 1))
-    col = trunc((lng - dc.longitude) * (ppc - 1))
+  def get_elevation(%__MODULE__{} = data_cell, latitude, longitude) do
+    %{hgt_data: hgt_data, points_per_cell: ppc, latitude: lat, longitude: lng} = data_cell
+
+    row = trunc((lat + 1 - latitude) * (ppc - 1))
+    col = trunc((longitude - lng) * (ppc - 1))
     byte_pos = (row * ppc + col) * 2
 
     if byte_pos >= 0 and byte_pos < byte_size(hgt_data) do
