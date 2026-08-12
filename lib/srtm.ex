@@ -9,7 +9,13 @@ defmodule SRTM do
   alias __MODULE__.Error
   alias __MODULE__.Source
 
-  @default_cache_path "./srtm_cache"
+  @default_opts [
+    disk_cache_enabled: true,
+    disk_cache_path: "./srtm_cache",
+    in_memory_cache_enabled: true,
+    in_memory_cache_module: Cache.PersistentTerm,
+    sources: [Source.AWS, Source.ESA]
+  ]
 
   @typedoc """
   A geographic coordinate that specifies the north–south position of a point on the surface of the
@@ -40,27 +46,34 @@ defmodule SRTM do
 
   ## Configuration
 
-  - `:disk_cache_enabled` (`t:boolean/0`) - whether the disk cache is enabled.
+  Unknown options raise an `ArgumentError`.
+
+  - `:disk_cache_enabled` (`t:boolean/0`) - whether the disk cache is enabled. Defaults to
+    `#{@default_opts[:disk_cache_enabled]}`.
 
   - `:disk_cache_path` (`t:Path.t/0`) - the path to the directory where the downloaded HGT files are
-    stored. Defaults to `#{@default_cache_path}`.
+    stored. Defaults to `#{@default_opts[:disk_cache_path]}`.
 
-  - `:in_memory_cache_enabled` (`t:boolean/0`) - whether the in-memory cache is enabled.
+  - `:in_memory_cache_enabled` (`t:boolean/0`) - whether the in-memory cache is enabled. Defaults to
+    `#{@default_opts[:in_memory_cache_enabled]}`.
 
       > #### Note {: .warning}
       >
       > See `SRTM.Cache.PersistentTerm` for the implications on system performance.
 
-  - `:in_memory_cache_module` (`t:module/0`) - A module that implements the `SRTM.Cache` behaviour.
-    Defaults to `SRTM.Cache.PersistentTerm`.
+  - `:in_memory_cache_module` (`t:module/0`) - a module that implements the `SRTM.Cache` behaviour.
+    Defaults to `#{inspect(@default_opts[:in_memory_cache_module])}`.
 
-  - `:sources` (list of `t:module/0`) - a list of modules that implement the `SRTM.Source`
-    behaviour. Defaults to `SRTM.Source.AWS` and `SRTM.Source.ESA`.
+  - `:sources` (list of `t:module/0` or `{module, keyword}`) - a list of modules that implement the
+    `SRTM.Source` behaviour, tried in order. Defaults to
+    `#{inspect(@default_opts[:sources])}`. See the source modules for the options they accept.
 
   """
   @spec get_elevation(latitude, longitude, keyword()) ::
           {:ok, elevation | nil} | {:error, Error.t()}
   def get_elevation(latitude, longitude, opts \\ []) do
+    opts = Keyword.validate!(opts, @default_opts)
+
     case get_data_cell({latitude, longitude}, opts) do
       {:ok, data_cell} ->
         elevation = DataCell.get_elevation(data_cell, latitude, longitude)
@@ -72,28 +85,20 @@ defmodule SRTM do
   end
 
   defp get_data_cell({latitude, longitude}, opts) do
-    in_memory_cache_enabled = Keyword.get(opts, :in_memory_cache_enabled, true)
-    in_memory_cache_module = Keyword.get(opts, :in_memory_cache_module, Cache.PersistentTerm)
-
-    disk_cache_enabled = Keyword.get(opts, :disk_cache_enabled, true)
-    disk_cache_path = Keyword.get(opts, :disk_cache_path, @default_cache_path)
-
-    sources = opts[:sources] || [Source.AWS, Source.ESA]
-
+    # Ordered from cheapest to most expensive.
     caches =
-      Enum.reject(
-        [
-          if(in_memory_cache_enabled, do: in_memory_cache_module),
-          if(disk_cache_enabled, do: Cache.File)
-        ],
-        &is_nil/1
-      )
+      for {enabled?, cache} <- [
+            {opts[:in_memory_cache_enabled], opts[:in_memory_cache_module]},
+            {opts[:disk_cache_enabled], Cache.File}
+          ],
+          enabled?,
+          do: cache
 
     hgt_name = hgt_name(latitude, longitude)
-    hgt_path = Path.join(disk_cache_path, hgt_name <> ".hgt")
+    hgt_path = Path.join(opts[:disk_cache_path], hgt_name <> ".hgt")
 
     with :error <- lookup_from_cache(hgt_path, caches),
-         {:ok, data_cell} <- download_data_cell(hgt_name, sources),
+         {:ok, data_cell} <- download_data_cell(hgt_name, opts[:sources]),
          :ok <- cache_data_cell(hgt_path, data_cell, caches) do
       {:ok, data_cell}
     end
