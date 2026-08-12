@@ -35,7 +35,10 @@ defmodule SRTM do
   @doc """
   Queries locations on the earth for elevation data.
 
-  If the corresponding file can't be found in the cache, it will be retrieved online.
+  If the corresponding file can't be found in the cache, it will be retrieved online and stored in
+  the caches. A cache that fails to store it fails the lookup, so that a cache which can no longer
+  be written to — an unwritable `:disk_cache_path`, say — surfaces instead of quietly turning
+  every lookup into a download.
 
   Returns the elevation in meters, or `nil` where the dataset holds no measurement for the
   coordinate: SRTM has voids where the radar returned no usable signal, and the raw tiles carry no
