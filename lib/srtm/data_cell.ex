@@ -12,7 +12,7 @@ defmodule SRTM.DataCell do
   @doc false
   def new(name, data) do
     with {:ok, ppc} <- get_ppc(data) do
-      {lat, lng} = reverse_coordinates(name)
+      {lat, lng} = parse_name(name)
 
       data_cell = %__MODULE__{
         hgt_data: data,
@@ -48,15 +48,12 @@ defmodule SRTM.DataCell do
   defp decode_elevation(<<val::signed-big-integer-size(16)>>) when val in -1000..10000, do: val
   defp decode_elevation(_binary), do: nil
 
-  defp reverse_coordinates(<<d0::size(8), lat::size(16), d1::size(8), lng::size(24)>>) do
-    lat = String.to_integer(<<lat::size(16)>>)
-    lng = String.to_integer(<<lng::size(24)>>)
-
-    lat = if d0 == ?S, do: lat * -1, else: lat
-    lng = if d1 == ?W, do: lng * -1, else: lng
-
-    {lat, lng}
+  defp parse_name(<<ns, latitude::binary-size(2), ew, longitude::binary-size(3)>>) do
+    {sign(ns) * String.to_integer(latitude), sign(ew) * String.to_integer(longitude)}
   end
+
+  defp sign(hemisphere) when hemisphere in [?S, ?W], do: -1
+  defp sign(_hemisphere), do: 1
 
   @srtm_3 1201 * 1201 * 2
   @srtm_1 3601 * 3601 * 2
