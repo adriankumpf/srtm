@@ -27,6 +27,19 @@ defmodule SRTM.Case do
     %{opts: opts, bypass: bypass}
   end
 
+  @doc """
+  Returns the parsed HGT fixture for `hgt_name`.
+  """
+  def data_cell_fixture(hgt_name \\ "N36W117") do
+    data =
+      "test/data/#{binary_part(hgt_name, 0, 3)}/#{hgt_name}.hgt.gz"
+      |> File.read!()
+      |> :zlib.gunzip()
+
+    {:ok, data_cell} = SRTM.DataCell.new(hgt_name, data)
+    data_cell
+  end
+
   def expect_hgt_download(bypass, response \\ nil) do
     Bypass.expect_once(bypass, fn %Plug.Conn{method: "GET"} = conn ->
       {status, body} = response || {200, File.read!(Path.join("test/data", conn.request_path))}
