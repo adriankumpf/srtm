@@ -74,13 +74,8 @@ defmodule SRTM do
   def get_elevation(latitude, longitude, opts \\ []) do
     opts = Keyword.validate!(opts, @default_opts)
 
-    case get_data_cell(latitude, longitude, opts) do
-      {:ok, data_cell} ->
-        elevation = DataCell.get_elevation(data_cell, latitude, longitude)
-        {:ok, elevation}
-
-      {:error, reason} ->
-        {:error, reason}
+    with {:ok, data_cell} <- get_data_cell(latitude, longitude, opts) do
+      {:ok, DataCell.get_elevation(data_cell, latitude, longitude)}
     end
   end
 
