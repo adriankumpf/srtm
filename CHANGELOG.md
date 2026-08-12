@@ -15,6 +15,7 @@
 - Make `SRTM.DataCell.new/2` and `SRTM.DataCell.to_binary/1` public, so `SRTM.Cache`
   implementations can parse and serialize cached HGT files
 - Make `SRTM.Source.get/2` public and document its `:timeout` option
+- Return `:error` instead of raising when an HGT file in the disk cache can't be read
 - Return an error instead of raising when a downloaded file isn't a readable archive, so the next
   source gets a turn
 
