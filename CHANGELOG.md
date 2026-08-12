@@ -10,6 +10,7 @@
 
 - Make `SRTM.DataCell.new/2` and `SRTM.DataCell.to_binary/1` public, so `SRTM.Cache`
   implementations can parse and serialize cached HGT files
+- Make `SRTM.Source.get/2` public and document its `:timeout` option
 
 ## v0.8.0 (2023-08-14)
 
