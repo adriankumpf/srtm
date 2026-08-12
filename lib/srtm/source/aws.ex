@@ -13,7 +13,7 @@ defmodule SRTM.Source.AWS do
   def fetch(<<dir::binary-size(3)>> <> _ = hgt_name, opts) do
     endpoint = opts[:endpoint] || @endpoint
 
-    with {:ok, zipped_data} <- get("#{endpoint}/#{dir}/#{hgt_name}.hgt.gz") do
+    with {:ok, zipped_data} <- get("#{endpoint}/#{dir}/#{hgt_name}.hgt.gz", opts) do
       {:ok, :zlib.gunzip(zipped_data)}
     end
   end

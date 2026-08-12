@@ -8,6 +8,8 @@
 
 ### Changes
 
+- Pass source options through to the HTTP request, making `:timeout` usable via
+  `sources: [{SRTM.Source.AWS, timeout: 5_000}]`
 - Make `SRTM.DataCell.new/2` and `SRTM.DataCell.to_binary/1` public, so `SRTM.Cache`
   implementations can parse and serialize cached HGT files
 - Make `SRTM.Source.get/2` public and document its `:timeout` option
