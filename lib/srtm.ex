@@ -115,10 +115,10 @@ defmodule SRTM do
   end
 
   defp store_in_caches(hgt_path, data_cell, caches) do
-    Enum.reduce_while(caches, :ok, fn cache, _ ->
+    Enum.reduce_while(caches, :ok, fn cache, :ok ->
       case cache.store(hgt_path, data_cell) do
         :ok -> {:cont, :ok}
-        error -> {:halt, error}
+        {:error, _reason} = error -> {:halt, error}
       end
     end)
   end
