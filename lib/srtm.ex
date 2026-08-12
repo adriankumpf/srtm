@@ -124,23 +124,24 @@ defmodule SRTM do
   end
 
   defp download_data_cell(_hgt_name, []) do
-    message = "There are no configured sources."
-    {:error, %Error{reason: :missing_sources, message: message}}
+    {:error, %Error{reason: :missing_sources, message: "There are no configured sources."}}
   end
 
-  defp download_data_cell(hgt_name, sources) do
-    sources
-    |> Enum.map(fn
-      {source, opts} -> {source, opts}
-      source -> {source, []}
-    end)
-    |> Enum.reduce_while(nil, fn {source, opts}, _ ->
-      case source.fetch(hgt_name, opts) do
-        {:ok, hgt_data} -> {:halt, DataCell.new(hgt_name, hgt_data)}
-        error -> {:cont, error}
-      end
-    end)
+  defp download_data_cell(hgt_name, [source | sources]) do
+    {source, opts} = normalize_source(source)
+
+    with {:ok, hgt_data} <- source.fetch(hgt_name, opts),
+         {:ok, data_cell} <- DataCell.new(hgt_name, hgt_data) do
+      {:ok, data_cell}
+    else
+      # The last source's error is the one reported.
+      {:error, _reason} = error ->
+        if sources == [], do: error, else: download_data_cell(hgt_name, sources)
+    end
   end
+
+  defp normalize_source({source, opts}), do: {source, opts}
+  defp normalize_source(source), do: {source, []}
 
   defp hgt_name(lat, lng) do
     if(lat >= 0, do: "N", else: "S") <>
