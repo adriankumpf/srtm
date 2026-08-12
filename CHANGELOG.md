@@ -9,22 +9,33 @@
   `SRTM.get_elevation/3` and in the built-in sources
 - Report a failed or unexpected archive as `:invalid_archive` instead of `:io_error`
 
-### Changes
+### Added
 
-- Fetch the SRTMGL1 dataset in `SRTM.Source.ESA` over HTTPS instead of HTTP
-- Disabling both caches no longer returns a `:missing_caches` error; every lookup downloads the HGT
-  file instead
-- Store each HGT file under its own `:persistent_term` key, so inserts no longer rewrite the whole
-  cache or trigger a global garbage collection
-- Pass source options through to the HTTP request, making `:timeout` usable via
-  `sources: [{SRTM.Source.AWS, timeout: 5_000}]`
 - Make `SRTM.DataCell.new/2` and `SRTM.DataCell.to_binary/1` public, so `SRTM.Cache`
   implementations can parse and serialize cached HGT files
 - Make `SRTM.Source.get/2` public and document its `:timeout` option, along with the `:endpoint`
   option of `SRTM.Source.AWS` and `SRTM.Source.ESA`
+- Document what a `nil` elevation means, how to implement a source or a cache, and where the disk
+  cache writes the files it downloads
+
+### Changed
+
+- Fetch the SRTMGL1 dataset in `SRTM.Source.ESA` over HTTPS instead of HTTP
+- Store each HGT file under its own `:persistent_term` key, so caching a file no longer rewrites
+  the whole cache or triggers a global garbage collection
+- Pass source options through to the HTTP request, making `:timeout` usable via
+  `sources: [{SRTM.Source.AWS, timeout: 5_000}]`
+- Widen the `:reason` of `SRTM.Error` to include the tuples `:httpc` reports, such as
+  `{:failed_connect, _}`
+
+### Fixed
+
+- Disabling both caches no longer returns a `:missing_caches` error; every lookup downloads the HGT
+  file instead
 - Return `:error` instead of raising when an HGT file in the disk cache can't be read
 - Return an error instead of raising when a downloaded file isn't a readable archive, so the next
   source gets a turn
+- Point the source links in the published documentation at the tagged revision, which used to 404
 
 ## v0.8.0 (2023-08-14)
 
