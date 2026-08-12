@@ -5,6 +5,8 @@
 ### Breaking Changes
 
 - Require Elixir 1.15 or later
+- Unknown options now raise an `ArgumentError` instead of being silently ignored in
+  `SRTM.get_elevation/3`
 - Report a failed or unexpected archive as `:invalid_archive` instead of `:io_error`
 
 ### Changes

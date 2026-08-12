@@ -116,6 +116,12 @@ defmodule SRTMTest do
     end
   end
 
+  test "rejects unknown options" do
+    assert_raise ArgumentError, ~r/:disc_cache_path/, fn ->
+      SRTM.get_elevation(@lat, @lng, disc_cache_path: "/tmp")
+    end
+  end
+
   @sources [SRTM.Source.AWS]
   test "populates higher caches", %{bypass: bypass, opts: opts} do
     expect_hgt_download(bypass)
