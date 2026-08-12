@@ -72,18 +72,13 @@ defmodule SRTMTest do
   @lat 36.455556
   @lng -116.866667
 
-  @sources [SRTM.Source.AWS]
-  test "gets the elevation from the AWS dataset", %{bypass: bypass, opts: opts} do
-    expect_hgt_download(bypass)
+  for source <- [SRTM.Source.AWS, SRTM.Source.ESA] do
+    @sources [source]
+    test "gets the elevation from the #{inspect(source)} dataset", %{bypass: bypass, opts: opts} do
+      expect_hgt_download(bypass)
 
-    assert {:ok, -51} = SRTM.get_elevation(@lat, @lng, opts)
-  end
-
-  @sources [SRTM.Source.ESA]
-  test "gets the elevation from the ESA dataset", %{bypass: bypass, opts: opts} do
-    expect_hgt_download(bypass)
-
-    assert {:ok, -51} = SRTM.get_elevation(@lat, @lng, opts)
+      assert {:ok, -51} = SRTM.get_elevation(@lat, @lng, opts)
+    end
   end
 
   @sources [TimeoutSource]
