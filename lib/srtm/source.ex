@@ -22,18 +22,7 @@ defmodule SRTM.Source do
     # Older OTP versions make httpc *hang* rather than error on binary header values.
     request = {String.to_charlist(url), [{~c"User-Agent", ~c"github.com/adriankumpf/srtm"}]}
 
-    http_options = [
-      timeout: opts[:timeout] || 60_000,
-      ssl:
-        [
-          verify: :verify_peer,
-          depth: 3,
-          customize_hostname_check: [
-            match_fun: :public_key.pkix_verify_hostname_match_fun(:https)
-          ]
-          # https://erlef.github.io/security-wg/secure_coding_and_deployment_hardening/inets
-        ] ++ cacert_option()
-    ]
+    http_options = [timeout: opts[:timeout] || 60_000, ssl: ssl_options()]
 
     case :httpc.request(:get, request, http_options, sync: true, body_format: :binary) do
       {:ok, {{_protocol, status_code, _status_message}, _headers, body}}
@@ -51,6 +40,15 @@ defmodule SRTM.Source do
         message = "Failed to download HGT file from '#{url}' (reason: #{inspect(reason)})."
         {:error, %SRTM.Error{reason: reason, message: message}}
     end
+  end
+
+  # https://erlef.github.io/security-wg/secure_coding_and_deployment_hardening/inets
+  defp ssl_options do
+    [
+      verify: :verify_peer,
+      depth: 3,
+      customize_hostname_check: [match_fun: :public_key.pkix_verify_hostname_match_fun(:https)]
+    ] ++ cacert_option()
   end
 
   if System.otp_release() >= "25" do
