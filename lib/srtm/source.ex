@@ -67,6 +67,7 @@ defmodule SRTM.Source do
 
         {:error, reason} ->
           raise SRTM.Error,
+            reason: :missing_certificates,
             message: """
             Failed to load OS certificates. We tried to use OS certificates because we
             couldn't find the :castore library. If you want to use :castore, please add
@@ -81,6 +82,7 @@ defmodule SRTM.Source do
   else
     defp os_cacert_option do
       raise SRTM.Error,
+        reason: :missing_certificates,
         message: """
         Failed to use any SSL certificates. We didn't find the :castore library,
         and we couldn't use OS certificates because that requires OTP 25 or later.
