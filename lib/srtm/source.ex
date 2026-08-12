@@ -13,16 +13,25 @@ defmodule SRTM.Source do
     quote do
       @behaviour SRTM.Source
 
-      import SRTM.Source
+      import SRTM.Source, only: [get: 1, get: 2]
     end
   end
 
-  @doc false
+  @doc """
+  Performs a GET request, returning the response body.
+
+  ## Options
+
+  - `:timeout` (`t:timeout/0`) - the time in milliseconds to wait for the request to complete.
+    Defaults to `60_000`.
+
+  """
+  @spec get(String.t(), keyword()) :: {:ok, binary()} | {:error, SRTM.Error.t()}
   def get(url, opts \\ []) do
     # Older OTP versions make httpc *hang* rather than error on binary header values.
     request = {String.to_charlist(url), [{~c"User-Agent", ~c"github.com/adriankumpf/srtm"}]}
 
-    http_options = [timeout: opts[:timeout] || 60_000, ssl: ssl_options()]
+    http_options = [timeout: Keyword.get(opts, :timeout, 60_000), ssl: ssl_options()]
 
     case :httpc.request(:get, request, http_options, sync: true, body_format: :binary) do
       {:ok, {{_protocol, status_code, _status_message}, _headers, body}}
