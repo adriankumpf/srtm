@@ -1,11 +1,19 @@
 defmodule SRTM.DataCell do
   @moduledoc """
-  Encapsulates an parsed HGT file.
+  A parsed HGT file.
+
+  `SRTM.Cache` implementations use `new/2` to parse a cached HGT file and `to_binary/1` to
+  serialize one.
   """
 
   alias SRTM.Error
 
-  @opaque t :: %__MODULE__{}
+  @opaque t :: %__MODULE__{
+            hgt_data: binary(),
+            latitude: integer(),
+            longitude: integer(),
+            points_per_cell: pos_integer()
+          }
 
   defstruct [:hgt_data, :latitude, :longitude, :points_per_cell]
 
@@ -14,7 +22,10 @@ defmodule SRTM.DataCell do
   @srtm3_byte_size 1201 * 1201 * 2
   @srtm1_byte_size 3601 * 3601 * 2
 
-  @doc false
+  @doc """
+  Parses `data`, the contents of the HGT file `name` (for example `"N36W117"`).
+  """
+  @spec new(String.t(), binary()) :: {:ok, t} | {:error, Error.t()}
   def new(name, data) do
     with {:ok, points_per_cell} <- points_per_cell(data) do
       {latitude, longitude} = parse_name(name)
@@ -30,10 +41,11 @@ defmodule SRTM.DataCell do
     end
   end
 
+  @doc """
+  Returns the contents of the HGT file the data cell was parsed from.
+  """
   @spec to_binary(t) :: binary()
-  def to_binary(%__MODULE__{} = data_cell) do
-    data_cell.hgt_data
-  end
+  def to_binary(%__MODULE__{hgt_data: hgt_data}), do: hgt_data
 
   @doc false
   def get_elevation(%__MODULE__{} = data_cell, latitude, longitude) do

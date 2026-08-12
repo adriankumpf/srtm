@@ -6,6 +6,11 @@
 
 - Require Elixir 1.15 or later
 
+### Changes
+
+- Make `SRTM.DataCell.new/2` and `SRTM.DataCell.to_binary/1` public, so `SRTM.Cache`
+  implementations can parse and serialize cached HGT files
+
 ## v0.8.0 (2023-08-14)
 
 ### Breaking Changes
