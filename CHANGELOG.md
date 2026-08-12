@@ -12,6 +12,8 @@
 ### Changes
 
 - Fetch the SRTMGL1 dataset in `SRTM.Source.ESA` over HTTPS instead of HTTP
+- Disabling both caches no longer returns a `:missing_caches` error; every lookup downloads the HGT
+  file instead
 - Store each HGT file under its own `:persistent_term` key, so inserts no longer rewrite the whole
   cache or trigger a global garbage collection
 - Pass source options through to the HTTP request, making `:timeout` usable via

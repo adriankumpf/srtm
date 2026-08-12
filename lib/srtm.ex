@@ -68,6 +68,8 @@ defmodule SRTM do
     `SRTM.Source` behaviour, tried in order. Defaults to
     `#{inspect(@default_opts[:sources])}`. See the source modules for the options they accept.
 
+  With both caches disabled, every lookup downloads the HGT file.
+
   """
   @spec get_elevation(latitude, longitude, keyword()) ::
           {:ok, elevation | nil} | {:error, Error.t()}
@@ -92,39 +94,27 @@ defmodule SRTM do
     hgt_name = hgt_name(latitude, longitude)
     hgt_path = Path.join(opts[:disk_cache_path], hgt_name <> ".hgt")
 
-    with :error <- lookup_from_cache(hgt_path, caches),
+    with :error <- fetch_from_caches(hgt_path, caches, []),
          {:ok, data_cell} <- download_data_cell(hgt_name, opts[:sources]),
-         :ok <- cache_data_cell(hgt_path, data_cell, caches) do
+         :ok <- store_in_caches(hgt_path, data_cell, caches) do
       {:ok, data_cell}
     end
   end
 
-  defp lookup_from_cache(_hgt_path, []) do
-    message = "There are no configured caches."
-    {:error, %Error{reason: :missing_caches, message: message}}
+  defp fetch_from_caches(_hgt_path, [], _missed), do: :error
+
+  defp fetch_from_caches(hgt_path, [cache | caches], missed) do
+    case cache.fetch(hgt_path) do
+      :error ->
+        fetch_from_caches(hgt_path, caches, [cache | missed])
+
+      # Backfill the caches that missed, so the next lookup stops at the cheapest one.
+      {:ok, data_cell} ->
+        with :ok <- store_in_caches(hgt_path, data_cell, missed), do: {:ok, data_cell}
+    end
   end
 
-  defp lookup_from_cache(hgt_path, caches) do
-    {_, result} =
-      Enum.reduce_while(caches, {[], :error}, fn cache, {higher_caches, _} ->
-        case cache.fetch(hgt_path) do
-          :error ->
-            {:cont, {[cache | higher_caches], :error}}
-
-          {:ok, data_cell} ->
-            result =
-              with :ok <- cache_data_cell(hgt_path, data_cell, higher_caches) do
-                {:ok, data_cell}
-              end
-
-            {:halt, {[], result}}
-        end
-      end)
-
-    result
-  end
-
-  defp cache_data_cell(hgt_path, data_cell, caches) do
+  defp store_in_caches(hgt_path, data_cell, caches) do
     Enum.reduce_while(caches, :ok, fn cache, _ ->
       case cache.store(hgt_path, data_cell) do
         :ok -> {:cont, :ok}

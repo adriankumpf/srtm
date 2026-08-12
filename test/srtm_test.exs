@@ -116,6 +116,18 @@ defmodule SRTMTest do
     end
   end
 
+  @sources [SRTM.Source.AWS]
+  test "downloads on every lookup if all caches are disabled", %{bypass: bypass, opts: opts} do
+    opts = Keyword.merge(opts, in_memory_cache_enabled: false, disk_cache_enabled: false)
+
+    for _ <- 1..2 do
+      expect_hgt_download(bypass)
+      assert {:ok, -51} = SRTM.get_elevation(@lat, @lng, opts)
+    end
+
+    refute File.exists?(Path.join(opts[:disk_cache_path], "N36W117.hgt"))
+  end
+
   test "rejects unknown options" do
     assert_raise ArgumentError, ~r/:disc_cache_path/, fn ->
       SRTM.get_elevation(@lat, @lng, disc_cache_path: "/tmp")
