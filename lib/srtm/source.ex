@@ -20,12 +20,7 @@ defmodule SRTM.Source do
   @doc false
   def get(url, opts \\ []) do
     # Older OTP versions make httpc *hang* rather than error on binary header values.
-    headers = [
-      {~c"Host", String.to_charlist(URI.parse(url).host)},
-      {~c"User-Agent", ~c"github.com/adriankumpf/srtm"}
-    ]
-
-    request = {String.to_charlist(url), headers}
+    request = {String.to_charlist(url), [{~c"User-Agent", ~c"github.com/adriankumpf/srtm"}]}
 
     http_options = [
       timeout: opts[:timeout] || 60_000,
