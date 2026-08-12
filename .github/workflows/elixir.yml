@@ -14,26 +14,24 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  mix_test:
+  test:
+    name: Elixir ${{ matrix.elixir }} / OTP ${{ matrix.otp }}
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     env:
       MIX_ENV: test
 
-    name: Elixir ${{ matrix.pair.elixir }} / OTP ${{ matrix.pair.otp }}
-
     strategy:
       fail-fast: false
       matrix:
         include:
-          - pair:
-              elixir: "1.20"
-              otp: "29"
-            lint: lint
+          - elixir: "1.20"
+            otp: "29"
+            lint: true
           # oldest pair allowed by `elixir: "~> 1.15"` in mix.exs
-          - pair:
-              elixir: "1.15"
-              otp: "25"
+          - elixir: "1.15"
+            otp: "25"
+
     steps:
       - uses: actions/checkout@v7
         with:
@@ -42,8 +40,8 @@ jobs:
       - uses: erlef/setup-beam@v1
         id: beam
         with:
-          otp-version: ${{matrix.pair.otp}}
-          elixir-version: ${{matrix.pair.elixir}}
+          elixir-version: ${{ matrix.elixir }}
+          otp-version: ${{ matrix.otp }}
 
       - name: Cache compiled build and deps
         id: cache-build
@@ -54,22 +52,21 @@ jobs:
           path: |
             _build
             deps
-          key: ${{ runner.os }}-mix-${{ env.cache-name }}-${{ matrix.pair.elixir }}-${{ matrix.pair.otp }}-${{ hashFiles('**/mix.lock') }}
+          key: ${{ runner.os }}-mix-${{ env.cache-name }}-${{ matrix.elixir }}-${{ matrix.otp }}-${{ hashFiles('**/mix.lock') }}
           restore-keys: |
-            ${{ runner.os }}-mix-${{ env.cache-name }}-${{ matrix.pair.elixir }}-${{ matrix.pair.otp }}-
+            ${{ runner.os }}-mix-${{ env.cache-name }}-${{ matrix.elixir }}-${{ matrix.otp }}-
 
-      - name: Install Dependencies
-        run: mix deps.get
+      - run: mix deps.get
 
       - run: mix format --check-formatted
-        if: ${{ matrix.lint }}
+        if: matrix.lint
 
       - run: mix deps.unlock --check-unused
-        if: ${{ matrix.lint }}
+        if: matrix.lint
 
       - run: mix deps.compile
 
       - run: mix compile --warnings-as-errors
-        if: ${{ matrix.lint }}
+        if: matrix.lint
 
       - run: mix test
