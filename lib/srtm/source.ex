@@ -1,6 +1,33 @@
 defmodule SRTM.Source do
   @moduledoc """
   Specifies the API for using an SRTM dataset source.
+
+  A source downloads the raw contents of an HGT file — the square grid of samples that
+  `SRTM.DataCell` parses — for a file name such as `"N36W117"`. The built-in sources are
+  `SRTM.Source.AWS` and `SRTM.Source.ESA`.
+
+  `use SRTM.Source` declares the behaviour and imports `get/2`, which performs the request with the
+  same certificate handling and `:timeout` option as the built-in sources:
+
+      defmodule MyApp.MirrorSource do
+        use SRTM.Source
+
+        @impl true
+        def fetch(hgt_name, opts) do
+          opts = Keyword.validate!(opts, [:timeout, endpoint: "https://srtm.example.com"])
+
+          get("\#{opts[:endpoint]}/\#{hgt_name}.hgt", opts)
+        end
+      end
+
+  Pass it to `SRTM.get_elevation/3`, on its own or paired with the options it is called with:
+
+      SRTM.get_elevation(36.455556, -116.866667,
+        sources: [{MyApp.MirrorSource, timeout: 5_000}, SRTM.Source.AWS]
+      )
+
+  Sources are tried in order, so returning an error rather than raising lets the next one take
+  over.
   """
 
   @doc """
