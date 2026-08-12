@@ -45,9 +45,7 @@ defmodule SRTMTest do
 
     @impl true
     def fetch(_id) do
-      name = "N36W117"
-      data = "test/data/N36/#{name}.hgt.gz" |> File.read!() |> :zlib.gunzip()
-      SRTM.DataCell.new(name, data)
+      {:ok, SRTM.Case.data_cell_fixture()}
     end
 
     @impl true
