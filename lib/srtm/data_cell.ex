@@ -9,16 +9,21 @@ defmodule SRTM.DataCell do
 
   defstruct [:hgt_data, :latitude, :longitude, :points_per_cell]
 
+  # HGT files are square grids of big-endian, signed 16-bit samples: 1201² for SRTM-3
+  # (3 arc-seconds) and 3601² for SRTM-1 (1 arc-second).
+  @srtm3_byte_size 1201 * 1201 * 2
+  @srtm1_byte_size 3601 * 3601 * 2
+
   @doc false
   def new(name, data) do
-    with {:ok, ppc} <- get_ppc(data) do
-      {lat, lng} = parse_name(name)
+    with {:ok, points_per_cell} <- points_per_cell(data) do
+      {latitude, longitude} = parse_name(name)
 
       data_cell = %__MODULE__{
         hgt_data: data,
-        latitude: lat,
-        longitude: lng,
-        points_per_cell: ppc
+        latitude: latitude,
+        longitude: longitude,
+        points_per_cell: points_per_cell
       }
 
       {:ok, data_cell}
@@ -55,13 +60,10 @@ defmodule SRTM.DataCell do
   defp sign(hemisphere) when hemisphere in [?S, ?W], do: -1
   defp sign(_hemisphere), do: 1
 
-  @srtm_3 1201 * 1201 * 2
-  @srtm_1 3601 * 3601 * 2
-
-  defp get_ppc(hgt_data) do
+  defp points_per_cell(hgt_data) do
     case byte_size(hgt_data) do
-      @srtm_3 -> {:ok, 1201}
-      @srtm_1 -> {:ok, 3601}
+      @srtm3_byte_size -> {:ok, 1201}
+      @srtm1_byte_size -> {:ok, 3601}
       _ -> {:error, %Error{reason: :unknown_file_type, message: "File type unknown"}}
     end
   end
