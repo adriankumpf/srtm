@@ -37,12 +37,21 @@ defmodule SRTM do
 
   If the corresponding file can't be found in the cache, it will be retrieved online.
 
-  Returns the elevation in meters.
+  Returns the elevation in meters, or `nil` where the dataset holds no measurement for the
+  coordinate: SRTM has voids where the radar returned no usable signal, and the raw tiles carry no
+  samples at all over open water.
+
+  The elevation is the sample the coordinate falls into rather than an interpolation between the
+  surrounding samples, so it describes a grid cell of roughly 30 m (1 arc-second) or 90 m
+  (3 arc-seconds) across, depending on the dataset.
 
   ## Examples
 
       iex> SRTM.get_elevation(36.455556, -116.866667)
       {:ok, -51}
+
+      iex> SRTM.get_elevation(2.984654, 59.686144)
+      {:ok, nil}
 
   ## Configuration
 
