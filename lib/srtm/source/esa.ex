@@ -14,7 +14,7 @@ defmodule SRTM.Source.ESA do
   def fetch(hgt_name, opts) do
     endpoint = opts[:endpoint] || @endpoint
 
-    with {:ok, zipped_data} <- get("#{endpoint}/#{hgt_name}.SRTMGL1.hgt.zip"),
+    with {:ok, zipped_data} <- get("#{endpoint}/#{hgt_name}.SRTMGL1.hgt.zip", opts),
          {:ok, data} <- unzip(zipped_data) do
       {:ok, data}
     end
