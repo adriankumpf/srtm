@@ -1,4 +1,6 @@
 defmodule SRTM.Source.ESA do
+  @endpoint "https://step.esa.int/auxdata/dem/SRTMGL1"
+
   @moduledoc """
   The built-in source for the SRTMGL1 dataset hosted on
   [esa.int](https://step.esa.int/auxdata/dem/SRTMGL1/).
@@ -7,19 +9,25 @@ defmodule SRTM.Source.ESA do
   there are none over open water. Lookups outside that coverage fail with a `:download_failed`
   error, so this source works best behind one that covers the whole globe, such as
   `SRTM.Source.AWS`.
+
+  ## Options
+
+  - `:endpoint` (`t:String.t/0`) - the base URL of the dataset. Defaults to `#{@endpoint}`.
+
+  - `:timeout` (`t:timeout/0`) - see `SRTM.Source.get/2`.
+
   """
 
   use SRTM.Source
 
   alias SRTM.Error
 
-  @endpoint "https://step.esa.int/auxdata/dem/SRTMGL1"
-
+  @doc false
   @impl true
   def fetch(hgt_name, opts) do
-    endpoint = opts[:endpoint] || @endpoint
+    opts = Keyword.validate!(opts, [:timeout, endpoint: @endpoint])
 
-    with {:ok, zipped_data} <- get("#{endpoint}/#{hgt_name}.SRTMGL1.hgt.zip", opts) do
+    with {:ok, zipped_data} <- get("#{opts[:endpoint]}/#{hgt_name}.SRTMGL1.hgt.zip", opts) do
       unzip(zipped_data)
     end
   end

@@ -16,4 +16,10 @@ defmodule SRTM.Source.AWSTest do
     assert {:error, %SRTM.Error{reason: :invalid_archive}} =
              AWS.fetch("N36W117", endpoint: "http://localhost:#{bypass.port}/")
   end
+
+  test "rejects unknown options" do
+    assert_raise ArgumentError, ~r/:timout/, fn ->
+      AWS.fetch("N36W117", timout: 5_000)
+    end
+  end
 end

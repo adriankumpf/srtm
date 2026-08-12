@@ -5,8 +5,8 @@
 ### Breaking Changes
 
 - Require Elixir 1.15 or later
-- Unknown options now raise an `ArgumentError` instead of being silently ignored in
-  `SRTM.get_elevation/3`
+- Unknown options now raise an `ArgumentError` instead of being silently ignored, both in
+  `SRTM.get_elevation/3` and in the built-in sources
 - Report a failed or unexpected archive as `:invalid_archive` instead of `:io_error`
 
 ### Changes
@@ -18,7 +18,8 @@
   `sources: [{SRTM.Source.AWS, timeout: 5_000}]`
 - Make `SRTM.DataCell.new/2` and `SRTM.DataCell.to_binary/1` public, so `SRTM.Cache`
   implementations can parse and serialize cached HGT files
-- Make `SRTM.Source.get/2` public and document its `:timeout` option
+- Make `SRTM.Source.get/2` public and document its `:timeout` option, along with the `:endpoint`
+  option of `SRTM.Source.AWS` and `SRTM.Source.ESA`
 - Return `:error` instead of raising when an HGT file in the disk cache can't be read
 - Return an error instead of raising when a downloaded file isn't a readable archive, so the next
   source gets a turn
