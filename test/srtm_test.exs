@@ -1,25 +1,49 @@
 defmodule SRTMTest do
   use SRTM.Case, async: true
 
-  @tag :integration
-  test "gets elevation data" do
-    assert {:ok, -51} = SRTM.get_elevation(36.455556, -116.866667)
-    assert {:ok, 239} = SRTM.get_elevation(45.2775, 13.726111)
-    assert {:ok, 299} = SRTM.get_elevation(-26.4, 146.25)
-    assert {:ok, 133} = SRTM.get_elevation(-12.1, -77.016667)
-    assert {:ok, 1294} = SRTM.get_elevation(40.75, -111.883333)
-    assert {:ok, 61} = SRTM.get_elevation(-55.948666, -67.275368)
-    assert {:ok, 24} = SRTM.get_elevation(60.259915, 24.977134)
-    assert {:ok, 112} = SRTM.get_elevation(64.351085, 26.273660)
-    assert {:ok, 14} = SRTM.get_elevation(65.011237, 25.484176)
-    assert {:ok, 203} = SRTM.get_elevation(-63.359899, -57.331874)
-    assert {:ok, nil} = SRTM.get_elevation(-56.359899, -57.331874)
-    assert {:ok, nil} = SRTM.get_elevation(-56.359899, -57.331874)
-    assert {:ok, nil} = SRTM.get_elevation(89.559011, 97.407534)
-    assert {:ok, 2435} = SRTM.get_elevation(-83.755023, 3.016760)
-    assert {:ok, 368} = SRTM.get_elevation(-48.954253, 68.990165)
-    assert {:ok, nil} = SRTM.get_elevation(2.984654, 59.686144)
-    assert {:ok, 1294} = SRTM.get_elevation(40.75, -111.883333)
+  # Locations both datasets cover and agree on.
+  @elevations [
+    {36.455556, -116.866667, -51},
+    {45.2775, 13.726111, 239},
+    {-26.4, 146.25, 299},
+    {-12.1, -77.016667, 133},
+    {-55.948666, -67.275368, 61},
+    {-48.954253, 68.990165, 368}
+  ]
+
+  # SRTMGL1 spans 60°N to 56°S and has no tiles over open water. Terrain Tiles fills those gaps from
+  # other datasets, which also makes it disagree with the raw tiles in places: the two put Salt Lake
+  # City at 1294 m and 1298 m respectively.
+  @aws_elevations @elevations ++
+                    [
+                      {40.75, -111.883333, 1294},
+                      {60.259915, 24.977134, 24},
+                      {64.351085, 26.273660, 112},
+                      {65.011237, 25.484176, 14},
+                      {-63.359899, -57.331874, 203},
+                      {-83.755023, 3.016760, 2435},
+                      {-56.359899, -57.331874, nil},
+                      {89.559011, 97.407534, nil},
+                      {2.984654, 59.686144, nil}
+                    ]
+
+  @esa_elevations @elevations ++ [{40.75, -111.883333, 1298}]
+
+  for {source, locations} <- [
+        {SRTM.Source.AWS, @aws_elevations},
+        {SRTM.Source.ESA, @esa_elevations}
+      ] do
+    @source source
+    @locations locations
+
+    @tag :integration
+    test "gets elevation data from the live #{inspect(source)} dataset", %{opts: opts} do
+      opts = Keyword.put(opts, :sources, [@source])
+
+      for {latitude, longitude, elevation} <- @locations do
+        assert SRTM.get_elevation(latitude, longitude, opts) == {:ok, elevation}
+      end
+    end
   end
 
   defmodule TimeoutSource do
